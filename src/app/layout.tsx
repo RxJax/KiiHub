@@ -10,6 +10,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 import { ClientLayout } from "@/components/ClientLayout";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -66,6 +67,7 @@ export default function RootLayout({
             </QuestProvider>
           </WalletProvider>
         </ThemeProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
