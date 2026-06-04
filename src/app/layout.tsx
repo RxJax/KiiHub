@@ -4,9 +4,7 @@ import "./globals.css";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { QuestProvider } from "@/contexts/QuestContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { Sidebar } from "@/components/Sidebar";
-import { LiveNetworkWidget } from "@/components/LiveNetworkWidget";
-import { WalletGuard } from "@/components/WalletGuard";
+import { ClientLayout } from "@/components/ClientLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,29 +55,9 @@ export default function RootLayout({
         <ThemeProvider>
           <WalletProvider>
             <QuestProvider>
-              {/* Sidebar */}
-              <Sidebar />
-
-              {/* Main Area */}
-              <div className="flex-1 min-h-screen pl-64 flex flex-col relative">
-                {/* Background Glows and Grid */}
-                <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
-                
-                {/* Purple Ambient Blob top-left */}
-                <div className="absolute top-[-10%] left-[5%] w-[500px] h-[500px] rounded-full bg-kii-purple/10 blur-[120px] pointer-events-none" />
-                {/* Blue Ambient Blob bottom-right */}
-                <div className="absolute bottom-[-10%] right-[5%] w-[600px] h-[600px] rounded-full bg-kii-blue/5 blur-[150px] pointer-events-none" />
-
-                {/* Floating Live Widget */}
-                <LiveNetworkWidget />
-
-                {/* Page Contents */}
-                <main className="flex-1 w-full max-w-7xl mx-auto px-8 py-10 relative z-10">
-                  <WalletGuard>
-                    {children}
-                  </WalletGuard>
-                </main>
-              </div>
+              <ClientLayout>
+                {children}
+              </ClientLayout>
             </QuestProvider>
           </WalletProvider>
         </ThemeProvider>

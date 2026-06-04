@@ -15,7 +15,7 @@ export const LiveNetworkWidget: React.FC = () => {
   if (pathname === "/") return null;
 
   return (
-    <div className="fixed top-5 right-6 z-50 flex items-center gap-3">
+    <div className="lg:flex hidden fixed top-5 right-6 z-50 items-center gap-3">
       {/* Theme Toggle Widget */}
       <button
         onClick={toggleTheme}

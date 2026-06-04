@@ -20,9 +20,15 @@ import {
   Award,
   Gamepad2,
   RefreshCw,
-  BarChart2
+  BarChart2,
+  X
 } from "lucide-react";
 import { useWallet } from "../contexts/WalletContext";
+
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
 
 const navigationGroups = [
   {
@@ -58,7 +64,7 @@ const navigationGroups = [
   }
 ];
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const pathname = usePathname();
   const { 
     isConnected, 
@@ -68,7 +74,8 @@ export const Sidebar: React.FC = () => {
     balance,
     connectWallet,
     chainId,
-    addNetworkToMetaMask
+    addNetworkToMetaMask,
+    latestBlock
   } = useWallet();
   
   const truncateAddress = (addr: string) => {
@@ -76,11 +83,22 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 h-screen border-r border-brand-border bg-brand-black/90 flex flex-col justify-between select-none fixed left-0 top-0 z-40 backdrop-blur-xl">
+    <aside className={`w-64 h-screen border-r border-brand-border bg-brand-black/90 flex flex-col justify-between select-none fixed left-0 top-0 z-50 backdrop-blur-xl transition-transform duration-300 ${
+      isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+    }`}>
       {/* Top Section - Logo & Level */}
       <div className="flex flex-col pt-6 overflow-y-auto flex-1">
         {/* Logo */}
         <div className="px-6 pb-7 border-b border-brand-border/40 relative">
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden absolute top-4 right-4 p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+              aria-label="Close sidebar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
           <style dangerouslySetInnerHTML={{__html: `
             @keyframes logo-float {
               0%, 100% { transform: translateY(0) scale(1); }
@@ -141,6 +159,35 @@ export const Sidebar: React.FC = () => {
           </Link>
         </div>
 
+        {/* Mobile Network Info Widgets */}
+        <div className="lg:hidden px-5 py-3 border-b border-brand-border/40 bg-zinc-950/20 flex flex-col gap-2">
+          <div className="flex items-center justify-between text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+            <span>Status</span>
+            <div className="flex items-center gap-1.5 text-kii-teal font-extrabold">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-kii-teal opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-kii-teal"></span>
+              </span>
+              ONLINE
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-zinc-900/60 border border-brand-border/60 text-xs">
+              <span className="text-zinc-500 text-[10.5px]">Network</span>
+              <span className="text-zinc-300 font-bold text-[10.5px]">Testnet EVM</span>
+            </div>
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-zinc-900/60 border border-brand-border/60 text-xs">
+              <div className="flex items-center gap-1.5 text-zinc-500 text-[10.5px]">
+                <Layers className="w-3 h-3 text-kii-purple" />
+                Block
+              </div>
+              <span className="font-mono text-white text-[10.5px] font-bold">
+                #{latestBlock?.toLocaleString() || "0"}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Nav Links */}
         <nav className="mt-4 px-3 space-y-4">
           {navigationGroups.map((group) => (
@@ -160,6 +207,7 @@ export const Sidebar: React.FC = () => {
                     <Link
                       key={item.name}
                       href={item.path}
+                      onClick={onClose}
                       className={`flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 group border border-transparent ${
                         isActive
                           ? "bg-cyan-500/[0.03] text-white border-l-2 border-l-cyan-400 border-t-transparent border-b-transparent border-r-transparent shadow-[inset_0_0_8px_rgba(6,182,212,0.03)] font-black"
