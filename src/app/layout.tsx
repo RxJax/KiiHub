@@ -5,6 +5,7 @@ import { WalletProvider } from "@/contexts/WalletContext";
 import { QuestProvider } from "@/contexts/QuestContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ClientLayout } from "@/components/ClientLayout";
+import { Analytics } from '@vercel/analytics/next';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,6 +62,7 @@ export default function RootLayout({
             </QuestProvider>
           </WalletProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
