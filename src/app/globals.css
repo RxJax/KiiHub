@@ -1,0 +1,411 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-black: var(--brand-black);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-card: var(--brand-card);
+  --color-brand-border: var(--brand-border);
+  --color-brand-border-purple: var(--brand-border-purple);
+  --color-brand-border-blue: var(--brand-border-blue);
+  
+  --color-kii-purple: #6366F1;
+  --color-kii-purple-light: #818CF8;
+  --color-kii-purple-hover: #4F46E5;
+  --color-kii-purple-dark: var(--kii-purple-dark-var);
+  
+  --color-kii-blue: #06B6D4;
+  --color-kii-blue-light: #22D3EE;
+  --color-kii-blue-hover: #0891B2;
+  --color-kii-blue-dark: var(--kii-blue-dark-var);
+  
+  --color-kii-teal: #14B8A6;
+  --color-kii-emerald: #10B981;
+  
+  --font-geist: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Override Zinc Color Scale with CSS Variables */
+  --color-zinc-50: var(--zinc-50);
+  --color-zinc-100: var(--zinc-100);
+  --color-zinc-200: var(--zinc-200);
+  --color-zinc-300: var(--zinc-300);
+  --color-zinc-400: var(--zinc-400);
+  --color-zinc-500: var(--zinc-500);
+  --color-zinc-600: var(--zinc-600);
+  --color-zinc-700: var(--zinc-700);
+  --color-zinc-800: var(--zinc-800);
+  --color-zinc-900: var(--zinc-900);
+  --color-zinc-950: var(--zinc-950);
+}
+
+:root {
+  --background: #030304;
+  --foreground: #f4f4f5;
+
+  /* Standard Zinc Scale for Dark Mode */
+  --zinc-50: #fafafa;
+  --zinc-100: #f4f4f5;
+  --zinc-200: #e4e4e7;
+  --zinc-300: #d4d4d8;
+  --zinc-400: #a1a1aa;
+  --zinc-500: #71717a;
+  --zinc-600: #52525b;
+  --zinc-700: #3f3f46;
+  --zinc-800: #27272a;
+  --zinc-900: #18181b;
+  --zinc-950: #09090b;
+
+  --brand-black: #08080A;
+  --brand-dark: #030304;
+  --brand-card: rgba(13, 13, 16, 0.7);
+  --brand-border: rgba(255, 255, 255, 0.05);
+  --brand-border-purple: rgba(99, 102, 241, 0.15);
+  --brand-border-blue: rgba(6, 182, 212, 0.15);
+
+  --kii-purple-dark-var: #1E1B4B;
+  --kii-blue-dark-var: #083344;
+
+  --grid-color: rgba(255, 255, 255, 0.015);
+
+  --glass-bg: rgba(13, 13, 16, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-purple-bg: rgba(15, 10, 25, 0.65);
+  --glass-purple-border: rgba(99, 102, 241, 0.15);
+  --glass-blue-bg: rgba(10, 15, 25, 0.65);
+  --glass-blue-border: rgba(6, 182, 212, 0.15);
+
+  --scrollbar-track: rgba(13, 13, 16, 0.3);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+}
+
+.light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  /* Inverted Zinc Scale for Light Mode */
+  --zinc-50: #0f172a;   /* text-zinc-50 becomes dark slate text */
+  --zinc-100: #1e293b;  /* text-zinc-100 becomes dark slate text */
+  --zinc-200: #334155;
+  --zinc-300: #475569;
+  --zinc-400: #64748b;  /* standard muted text */
+  --zinc-500: #94a3b8;  /* lighter gray text */
+  --zinc-600: #cbd5e1;  /* light borders/dividers */
+  --zinc-700: #e2e8f0;  /* borders */
+  --zinc-800: #f1f5f9;  /* panel bg */
+  --zinc-900: #f8fafc;  /* background gray */
+  --zinc-950: #ffffff;  /* card white */
+
+  --brand-black: #ffffff;
+  --brand-dark: #f8fafc;
+  --brand-card: rgba(255, 255, 255, 0.8);
+  --brand-border: rgba(0, 0, 0, 0.08);
+  --brand-border-purple: rgba(99, 102, 241, 0.12);
+  --brand-border-blue: rgba(6, 182, 212, 0.12);
+
+  --kii-purple-dark-var: #e0e7ff;
+  --kii-blue-dark-var: #cffafe;
+
+  --grid-color: rgba(0, 0, 0, 0.025);
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-purple-bg: rgba(245, 243, 255, 0.75);
+  --glass-purple-border: rgba(99, 102, 241, 0.12);
+  --glass-blue-bg: rgba(236, 254, 255, 0.75);
+  --glass-blue-border: rgba(6, 182, 212, 0.12);
+
+  --scrollbar-track: rgba(0, 0, 0, 0.03);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.35);
+}
+
+/* Glassmorphism Panel UTILS */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-panel-purple {
+  background: var(--glass-purple-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-purple-border);
+}
+
+.glass-panel-blue {
+  background: var(--glass-blue-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-blue-border);
+}
+
+/* Background Grid Overlay */
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+}
+
+/* Glowing Accent Dots */
+.bg-radial-glow {
+  background: radial-gradient(circle 600px at var(--x, 50%) var(--y, 50%), rgba(99, 102, 241, 0.08), transparent 70%);
+}
+
+.glow-purple {
+  filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.35));
+}
+
+.glow-blue {
+  filter: drop-shadow(0 0 15px rgba(6, 182, 212, 0.35));
+}
+
+/* Pulsing Dots */
+@keyframes networkPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-slow {
+  animation: networkPulse 2.5s infinite ease-in-out;
+}
+
+@keyframes spin-slow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 12s infinite linear;
+}
+
+/* Shimmer animation for skeletons */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer-after::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.03) 20%,
+    rgba(255, 255, 255, 0.08) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 2s infinite;
+  content: '';
+}
+
+/* Editor adjustments for Monaco */
+.monaco-editor-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--brand-border);
+}
+
+/* ==========================================================================
+   LIGHT MODE READABILITY & COLOR OVERRIDES
+   ========================================================================== */
+
+/* Force all text-white and text-zinc utility classes to use dark contrast colors in Light Mode */
+.light .text-white {
+  color: #0f172a !important; /* Dark Slate */
+}
+.light .text-zinc-50 {
+  color: #0f172a !important;
+}
+.light .text-zinc-100 {
+  color: #1e293b !important;
+}
+.light .text-zinc-200 {
+  color: #334155 !important;
+}
+.light .text-zinc-300 {
+  color: #475569 !important;
+}
+.light .text-zinc-400 {
+  color: #64748b !important; /* Dark Slate Gray */
+}
+.light .text-zinc-500 {
+  color: #8e9aa8 !important;
+}
+.light .text-zinc-600 {
+  color: #475569 !important;
+}
+.light .text-zinc-700 {
+  color: #334155 !important;
+}
+.light .text-zinc-800 {
+  color: #1e293b !important;
+}
+.light .text-zinc-900 {
+  color: #0f172a !important;
+}
+.light .text-zinc-950 {
+  color: #0f172a !important;
+}
+
+/* Sidebar active link styling */
+.light aside a.bg-gradient-to-r,
+.light aside a.bg-gradient-to-r span,
+.light aside a.bg-gradient-to-r p,
+.light aside a.bg-gradient-to-r svg {
+  color: var(--foreground) !important;
+}
+
+/* 
+   EXCEPTIONS:
+   Keep text white on elements that are dark even when Light Mode is active.
+*/
+
+/* 1. Buttons and badges with dark purple/blue gradient backgrounds */
+.light .from-kii-purple.to-kii-blue,
+.light .from-kii-purple.to-kii-blue *,
+.light .from-kii-blue\/90.via-kii-purple\/70.to-kii-blue\/95,
+.light .from-kii-blue\/90.via-kii-purple\/70.to-kii-blue\/95 * {
+  color: #ffffff !important;
+}
+.light .from-kii-purple.to-kii-blue svg,
+.light .from-kii-blue\/90.via-kii-purple\/70.to-kii-blue\/95 svg {
+  color: #ffffff !important;
+}
+
+/* 2. Custom dark card containers (e.g. Deploy page contract cards) */
+.light [class*="bg-[#0b0e17]"],
+.light [class*="bg-[#0b0e17]"] * {
+  color: #ffffff !important;
+}
+.light [class*="bg-[#0b0e17]"] svg {
+  color: inherit !important;
+}
+
+/* 3. Elements with saturated solid dark backgrounds (faucet badges, status badges, utility buttons, arcade buttons) */
+.light .bg-kii-purple,
+.light .bg-kii-purple *,
+.light .bg-kii-blue,
+.light .bg-kii-blue *,
+.light .bg-blue-600,
+.light .bg-blue-600 *,
+.light .bg-blue-700,
+.light .bg-blue-700 *,
+.light .bg-indigo-600,
+.light .bg-indigo-600 *,
+.light .bg-indigo-700,
+.light .bg-indigo-700 *,
+.light .bg-violet-600,
+.light .bg-violet-600 *,
+.light .bg-purple-600,
+.light .bg-purple-600 *,
+.light .bg-red-500,
+.light .bg-red-500 *,
+.light .bg-green-500,
+.light .bg-green-500 *,
+.light .bg-amber-500,
+.light .bg-amber-500 *,
+.light .bg-rose-500,
+.light .bg-rose-500 *,
+.light .bg-rose-600,
+.light .bg-rose-600 *,
+.light .text-white-keep {
+  color: #ffffff !important;
+}
+
+/* Ensure SVG icons in general are correctly colored */
+.light svg.text-white {
+  color: #0f172a !important;
+}
+.light button[class*="bg-gradient-"] svg,
+.light a[class*="bg-gradient-"] svg {
+  color: #ffffff !important;
+}
+
+/* Custom logo and banner gradients in Light Mode */
+.light .animate-text-gradient,
+.light .animate-hero-gradient {
+  background-image: linear-gradient(to right, #0891b2, #4f46e5, #7c3aed) !important;
+}
+
+/* 4. Global overrides for white border/background opacity classes in Light Mode */
+.light [class*="border-white/"],
+.light [class*="border-white\\["] {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+.light [class*="bg-white/"],
+.light [class*="bg-white\\["] {
+  background-color: rgba(15, 23, 42, 0.03) !important;
+}
+
+/* Retain original properties for exceptions (dark backgrounds in light mode) */
+.light .bg-kii-purple [class*="border-white/"],
+.light .bg-kii-blue [class*="border-white/"],
+.light [class*="bg-gradient-to"] [class*="border-white/"],
+.light .bg-kii-purple [class*="border-white\\["],
+.light .bg-kii-blue [class*="border-white\\["],
+.light [class*="bg-gradient-to"] [class*="border-white\\["] {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.light .bg-kii-purple [class*="bg-white/"],
+.light .bg-kii-blue [class*="bg-white/"],
+.light [class*="bg-gradient-to"] [class*="bg-white/"],
+.light .bg-kii-purple [class*="bg-white\\["],
+.light .bg-kii-blue [class*="bg-white\\["],
+.light [class*="bg-gradient-to"] [class*="bg-white\\["] {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Custom background overrides for achievement cards in Light Mode */
+.light [class*="bg-[#13141f]"] {
+  background-color: rgba(241, 245, 249, 0.6) !important;
+}
+.light [class*="bg-[#0f1016]"] {
+  background-color: rgba(248, 250, 252, 0.4) !important;
+}
+

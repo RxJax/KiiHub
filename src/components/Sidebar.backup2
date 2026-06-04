@@ -1,0 +1,215 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { 
+  LayoutDashboard, 
+  Compass, 
+  Droplet, 
+  Cpu, 
+  Activity, 
+  Wallet, 
+  Code, 
+  Trophy, 
+  BookOpen, 
+  Terminal,
+  Layers,
+  LogOut,
+  User,
+  Award,
+  Gamepad2,
+  RefreshCw,
+  BarChart2
+} from "lucide-react";
+import { useWallet } from "../contexts/WalletContext";
+import { useQuests } from "../contexts/QuestContext";
+
+const navItems = [
+  { name: "Dashboard", path: "/", icon: LayoutDashboard },
+  { name: "Getting started", path: "/getting-started", icon: Compass },
+  { name: "KiiSwap DEX", path: "/kiiswap", icon: RefreshCw },
+  { name: "Deploy contracts", path: "/deploy", icon: Code },
+  { name: "Kii Arcade", path: "/gaming", icon: Gamepad2 },
+  { name: "Testnet Quests", path: "/quests", icon: Trophy },
+  { name: "Builder profile", path: "/profile", icon: User },
+  { name: "Hall of fame", path: "/hall-of-fame", icon: Award },
+  { name: "Faucet", path: "/faucet", icon: Droplet },
+  { name: "Explorer", path: "/explorer", icon: Activity },
+  { name: "Wallet tools", path: "/wallet-tools", icon: Wallet },
+];
+
+export const Sidebar: React.FC = () => {
+  const pathname = usePathname();
+  const { 
+    isConnected, 
+    walletType, 
+    displayAddress, 
+    disconnectWallet, 
+    balance,
+    connectWallet,
+    chainId,
+    addNetworkToMetaMask
+  } = useWallet();
+  
+  const { level, totalXp, profileUsername, profileTitle, profileAvatar } = useQuests();
+
+  const truncateAddress = (addr: string) => {
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  return (
+    <aside className="w-64 h-screen border-r border-brand-border bg-brand-black/90 flex flex-col justify-between select-none fixed left-0 top-0 z-40 backdrop-blur-xl">
+      {/* Top Section - Logo & Level */}
+      <div className="flex flex-col pt-6 overflow-y-auto flex-1">
+        {/* Logo */}
+        <div className="px-6 pb-7 border-b border-brand-border/40 relative">
+          <style dangerouslySetInnerHTML={{__html: `
+            @keyframes logo-float {
+              0%, 100% { transform: translateY(0) scale(1); }
+              50% { transform: translateY(-4px) scale(1.03); }
+            }
+            @keyframes logo-glow {
+              0%, 100% { opacity: 0.4; transform: scale(1); filter: blur(8px); }
+              50% { opacity: 0.75; transform: scale(1.2); filter: blur(12px); }
+            }
+            @keyframes text-gradient-shift {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+            .animate-logo-float {
+              animation: logo-float 3.5s ease-in-out infinite;
+            }
+            .animate-logo-glow {
+              animation: logo-glow 3.5s ease-in-out infinite;
+            }
+            .animate-text-gradient {
+              background-size: 200% auto;
+              animation: text-gradient-shift 3s linear infinite;
+            }
+          `}} />
+
+          <Link href="/" className="flex items-center gap-3.5 group relative">
+            {/* Glowing pulsing aura behind the icon */}
+            <div className="absolute top-0 left-0 w-11 h-11 rounded-xl bg-gradient-to-tr from-kii-purple via-indigo-500 to-kii-blue opacity-50 animate-logo-glow pointer-events-none" />
+
+            {/* Logo Icon */}
+            <div className="relative w-11 h-11 rounded-xl bg-gradient-to-tr from-kii-purple via-indigo-500 to-kii-blue flex items-center justify-center shadow-xl shadow-kii-purple/20 transition-all duration-300 animate-logo-float border border-white/20">
+              <Layers className="w-5.5 h-5.5 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
+              
+              {/* Corner tech lines inside the icon */}
+              <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 border-t border-l border-white/30" />
+              <div className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 border-b border-r border-white/30" />
+            </div>
+
+            {/* Logo Text */}
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-0.5">
+                <span className="font-black text-white tracking-tight text-xl">Kii</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 font-black text-xl animate-text-gradient">Hub</span>
+              </div>
+              <span className="text-[8.5px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest block leading-none font-mono">TESTNET PORTAL</span>
+            </div>
+          </Link>
+          
+          {/* Level Progress */}
+          <div className="mt-5 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04] flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-md bg-kii-purple/15 flex items-center justify-center text-lg border border-kii-purple/20 flex-shrink-0">
+                {profileAvatar}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-bold text-white truncate">{profileUsername}</span>
+                <span className="text-[10px] text-zinc-400 font-medium truncate">{profileTitle} (L{level})</span>
+              </div>
+            </div>
+            <div className="text-[9px] font-bold text-kii-blue font-mono px-1.5 py-0.5 rounded bg-kii-blue/10 border border-kii-blue/20 flex-shrink-0">
+              {totalXp} XP
+            </div>
+          </div>
+        </div>
+
+        {/* Nav Links */}
+        <nav className="mt-4 px-3 space-y-1">
+          {navItems.map((item) => {
+            const isActive = pathname === item.path;
+            const Icon = item.icon;
+            
+            return (
+              <Link
+                key={item.name}
+                href={item.path}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${
+                  isActive
+                    ? "bg-gradient-to-r from-kii-purple/20 to-kii-blue/5 text-white border border-brand-border-purple/35 shadow-md shadow-kii-purple/5 animate-pulse-subtle"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border border-transparent"
+                }`}
+              >
+                <Icon className={`w-4.5 h-4.5 transition-colors ${
+                  isActive ? "text-kii-blue" : "text-zinc-500 group-hover:text-zinc-300"
+                }`} />
+                <span>{item.name}</span>
+                {item.name === "KiiSwap DEX" && (
+                  <span className="ml-auto text-[9px] font-bold text-kii-purple-light border border-kii-purple/20 px-1 py-0.2 rounded bg-kii-purple/10 animate-pulse">
+                    NEW
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Bottom Section - Wallet Status */}
+      <div className="p-4 border-t border-brand-border/40 bg-brand-dark/50 space-y-3.5">
+
+        {/* Wallet Status Area */}
+        {isConnected && displayAddress ? (
+          walletType === "metamask" && chainId !== 1336 ? (
+            <button
+              onClick={addNetworkToMetaMask}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 text-xs font-semibold cursor-pointer transition-colors text-center shadow-lg"
+              title="Wrong network. Click to switch to KiiChain Testnet."
+            >
+              <span>⚠️ Wrong Network</span>
+              <span className="text-[10px] underline block">(Switch Chain)</span>
+            </button>
+          ) : (
+            <div className="p-3.5 rounded-lg bg-zinc-900/60 border border-brand-border flex items-center justify-between text-left">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-kii-purple to-kii-blue flex-shrink-0 flex items-center justify-center text-xs shadow-md border border-white/10">
+                  {walletType === "metamask" ? "🦊" : "🌌"}
+                </div>
+                <div className="flex flex-col min-w-0 font-mono">
+                  <span className="text-[9.5px] text-zinc-500 leading-none">{walletType === "metamask" ? "Metamask Connected" : "Keplr Connected"}</span>
+                  <span className="text-[10px] font-black text-white truncate max-w-[100px] mt-0.5">
+                    {truncateAddress(displayAddress)}
+                  </span>
+                  <span className="text-[10px] font-bold text-kii-blue mt-0.5">
+                    {balance} KII
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={disconnectWallet}
+                className="p-1 rounded hover:bg-red-500/10 text-zinc-500 hover:text-red-400 transition-colors"
+                title="Disconnect Wallet"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )
+        ) : (
+          <button
+            onClick={() => connectWallet("metamask")}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-gradient-to-r from-kii-purple to-kii-blue hover:opacity-95 text-white font-bold text-xs tracking-wider uppercase transition-opacity shadow-lg shadow-kii-purple/10"
+          >
+            <Wallet className="w-4 h-4" />
+            Connect Wallet
+          </button>
+        )}
+      </div>
+    </aside>
+  );
+};

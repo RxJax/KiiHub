@@ -1,0 +1,495 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useWallet } from "@/contexts/WalletContext";
+import { useQuests } from "@/contexts/QuestContext";
+import { 
+  User, 
+  Award, 
+  Globe, 
+  Plus, 
+  ArrowRight, 
+  Lock, 
+  Sparkles, 
+  Activity, 
+  Check, 
+  Edit3, 
+  Save, 
+  ExternalLink,
+  Flame
+} from "lucide-react";
+
+const Github = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    viewBox="0 0 24 24"
+    width="16"
+    height="16"
+    stroke="currentColor"
+    strokeWidth="2"
+    fill="none"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+  </svg>
+);
+
+const AVATARS = ["🚀", "🧙‍♂️", "🛡️", "⚡", "🔮", "👽", "👾", "🤖", "🦊", "🦁", "🐉", "🐙"];
+
+export default function Profile() {
+  const { isConnected, displayAddress, transactions, balance, walletType } = useWallet();
+  const { 
+    achievements, 
+    projects, 
+    referredUsers, 
+    totalXp, 
+    level, 
+    levelName, 
+    nextLevelXpRequired, 
+    xpProgress,
+    profileUsername, 
+    profileTitle, 
+    profileAvatar,
+    updateProfile, 
+    submitProject, 
+    simulateProjectVisit
+  } = useQuests();
+
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [usernameInput, setUsernameInput] = useState<string>(profileUsername);
+  const [avatarSelect, setAvatarSelect] = useState<string>(profileAvatar);
+  const [titleSelect, setTitleSelect] = useState<string>(profileTitle);
+  
+  // Project form inputs
+  const [projectName, setProjectName] = useState<string>("");
+  const [projectDesc, setProjectDesc] = useState<string>("");
+  const [projectGit, setProjectGit] = useState<string>("");
+  const [projectDemo, setProjectDemo] = useState<string>("");
+  
+  const [showProjForm, setShowProjForm] = useState<boolean>(false);
+
+  // Sync edit values to current profile states
+  useEffect(() => {
+    setUsernameInput(profileUsername);
+    setAvatarSelect(profileAvatar);
+    setTitleSelect(profileTitle);
+  }, [profileUsername, profileAvatar, profileTitle]);
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfile(usernameInput.trim(), titleSelect, avatarSelect);
+    setIsEditing(false);
+  };
+
+  const handleCreateProject = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!projectName.trim() || !projectDesc.trim()) return;
+    submitProject(
+      projectName.trim(),
+      projectDesc.trim(),
+      projectGit.trim(),
+      projectDemo.trim()
+    );
+    setProjectName("");
+    setProjectDesc("");
+    setProjectGit("");
+    setProjectDemo("");
+    setShowProjForm(false);
+  };
+
+  // Determine Title locks based on level / achievements
+  const titlesList = [
+    { name: "Newcomer", unlockDesc: "Always unlocked", unlocked: true },
+    { name: "Explorer", unlockDesc: "Reach Level 2 Explorer", unlocked: level >= 2 },
+    { name: "Builder", unlockDesc: "Reach Level 3 Builder", unlocked: level >= 3 },
+    { name: "Smart Contract Engineer", unlockDesc: "Reach Level 4 Developer", unlocked: level >= 4 },
+    { name: "Infrastructure Builder", unlockDesc: "Reach Level 4 Developer", unlocked: level >= 4 },
+    { name: "Top Builder", unlockDesc: "Reach Level 5 Architect", unlocked: level >= 5 },
+    { name: "Kii Master", unlockDesc: "Reach Level 6 Kii Master", unlocked: level >= 6 },
+    { name: "OG Builder", unlockDesc: "Connect wallet to Hub", unlocked: isConnected },
+    { name: "NFT Creator", unlockDesc: "Deploy NFT Collection contract", unlocked: achievements.find(a => a.id === "nft_creator")?.unlocked || false },
+    { name: "DeFi Builder", unlockDesc: "Deploy escrow / payment template", unlocked: achievements.find(a => a.id === "defi_builder")?.unlocked || false },
+  ];
+
+  // Group achievements by rarity
+  const rarityColors = {
+    Common: "border-zinc-700 bg-zinc-950/40 text-zinc-400",
+    Rare: "border-kii-blue/30 bg-kii-blue/[0.02] text-kii-blue-light glow-blue-sm",
+    Epic: "border-kii-purple/30 bg-kii-purple/[0.02] text-kii-purple-light glow-purple-sm",
+    Legendary: "border-amber-400/30 bg-amber-400/[0.02] text-amber-400 glow-amber-sm"
+  };
+
+  const rarityBanners = {
+    Common: "bg-zinc-800 text-zinc-400",
+    Rare: "bg-kii-blue/20 text-kii-blue-light",
+    Epic: "bg-kii-purple/20 text-kii-purple-light",
+    Legendary: "bg-amber-400/20 text-amber-300"
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Title */}
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
+          <User className="w-8 h-8 text-kii-purple" />
+          Builder Profile Manager
+        </h1>
+        <p className="text-zinc-400 text-sm">
+          Customize your public builder cards, view unlocked achievements, and manage submitted testnet projects.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Profile Card & Customization */}
+        <div className="glass-panel p-6 rounded-xl border border-brand-border space-y-6 relative overflow-hidden flex flex-col justify-between h-fit">
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-kii-purple/5 blur-2xl pointer-events-none" />
+          
+          <div className="space-y-5">
+            {/* Top avatar display */}
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-kii-purple/20 to-kii-blue/15 border border-brand-border-purple/35 flex items-center justify-center text-4xl shadow-xl">
+                {profileAvatar}
+              </div>
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h2 className="text-base font-extrabold text-white truncate">{profileUsername}</h2>
+                  <button 
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="p-1 rounded hover:bg-white/[0.04] text-zinc-500 hover:text-white transition-colors"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block bg-zinc-950/80 px-2 py-0.5 rounded border border-brand-border w-fit font-mono">
+                  {profileTitle}
+                </span>
+              </div>
+            </div>
+
+            {/* Editing Form */}
+            {isEditing ? (
+              <form onSubmit={handleSaveProfile} className="space-y-4 pt-4 border-t border-brand-border/60">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-zinc-400 font-bold uppercase">Nickname</label>
+                  <input
+                    type="text"
+                    required
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-zinc-950 border border-brand-border rounded-lg text-xs text-white focus:outline-none focus:border-kii-blue/50"
+                  />
+                </div>
+
+                {/* Avatar Picker */}
+                <div className="space-y-2">
+                  <label className="text-[10px] text-zinc-400 font-bold uppercase block">Choose Avatar</label>
+                  <div className="grid grid-cols-6 gap-2 max-h-[100px] overflow-y-auto pr-1">
+                    {AVATARS.map((av) => (
+                      <button
+                        type="button"
+                        key={av}
+                        onClick={() => setAvatarSelect(av)}
+                        className={`w-8 h-8 rounded flex items-center justify-center text-lg hover:bg-white/[0.05] transition-all border ${
+                          avatarSelect === av ? "border-kii-blue bg-kii-blue/15" : "border-transparent"
+                        }`}
+                      >
+                        {av}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Title selector */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-zinc-400 font-bold uppercase">Title Badge</label>
+                  <select
+                    value={titleSelect}
+                    onChange={(e) => setTitleSelect(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-zinc-950 border border-brand-border rounded-lg text-xs text-white focus:outline-none"
+                  >
+                    {titlesList.map((t) => (
+                      <option key={t.name} value={t.name} disabled={!t.unlocked}>
+                        {t.name} {!t.unlocked ? `(Locked: ${t.unlockDesc})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="flex-1 py-2 bg-white/[0.02] border border-brand-border text-white text-xs font-bold rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2 bg-gradient-to-r from-kii-purple to-kii-blue text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    Save profile
+                  </button>
+                </div>
+              </form>
+            ) : (
+              // Read mode RPG details
+              <div className="space-y-4 pt-4 border-t border-brand-border/40 text-xs font-mono">
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-500">Address:</span>
+                  <span className="text-white truncate max-w-[150px]" title={displayAddress || ""}>
+                    {displayAddress ? `${displayAddress.slice(0, 8)}...${displayAddress.slice(-6)}` : "Demo Mode"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-500">Network Wallet:</span>
+                  <span className="text-white capitalize">{walletType || "none"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-500">Wallet balance:</span>
+                  <span className="text-white font-bold">{balance} KII</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-500">Invited builders:</span>
+                  <span className="text-white font-bold">{referredUsers.length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-500">Submitted projects:</span>
+                  <span className="text-white font-bold">{projects.length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-500">On-Chain Tx Count:</span>
+                  <span className="text-white font-bold">{transactions.length} Txs</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Level Progress bottom shelf */}
+          <div className="pt-6 border-t border-brand-border/40 mt-6 space-y-2 font-mono text-[10px]">
+            <div className="flex items-center justify-between text-zinc-400 font-bold uppercase">
+              <span>{levelName} level progress</span>
+              <span className="text-white">{xpProgress}%</span>
+            </div>
+            
+            <div className="w-full h-2 rounded-full bg-zinc-950 border border-brand-border overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-kii-purple to-kii-blue transition-all"
+                style={{ width: `${xpProgress}%` }}
+              />
+            </div>
+            
+            <div className="flex justify-between text-zinc-500 font-medium">
+              <span>Level {level} Builder</span>
+              <span>{totalXp} XP</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Achievements Shelves Cabinets */}
+        <div className="lg:col-span-2 glass-panel p-6 rounded-xl border border-brand-border space-y-5">
+          <h3 className="text-sm font-bold text-white flex items-center gap-1.5 border-b border-brand-border pb-3">
+            <Award className="w-4.5 h-4.5 text-kii-purple" />
+            Achievements Showcase Cabinet
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {achievements.map((ach) => (
+              <div 
+                key={ach.id} 
+                className={`p-4 rounded-xl border flex items-start gap-3 transition-all relative overflow-hidden ${
+                  ach.unlocked 
+                    ? rarityColors[ach.rarity] 
+                    : "border-brand-border opacity-40 bg-zinc-950/40"
+                }`}
+              >
+                {/* Rarity Corner Banner */}
+                <div className={`absolute top-0 right-0 text-[8px] font-extrabold px-1.5 py-0.2 rounded-bl font-mono tracking-widest uppercase ${rarityBanners[ach.rarity]}`}>
+                  {ach.rarity}
+                </div>
+
+                <span className="text-2xl filter saturate-[0.9] pt-1 flex-shrink-0">{ach.icon}</span>
+                <div className="space-y-1 flex-1 min-w-0 pr-12">
+                  <h4 className="text-xs font-bold text-white leading-snug">{ach.title}</h4>
+                  <p className="text-[10px] text-zinc-500 leading-relaxed font-medium">{ach.description}</p>
+                  {ach.unlocked && ach.unlockedAt && (
+                    <span className="text-[8px] text-kii-purple-light block mt-1 font-mono">
+                      Unlocked: {new Date(ach.unlockedAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Projects Submissions Section */}
+      <section className="glass-panel p-6 rounded-xl border border-brand-border space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-border pb-4">
+          <div>
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Activity className="w-4.5 h-4.5 text-kii-blue" />
+              Your Published Projects
+            </h3>
+            <p className="text-xs text-zinc-500 mt-1">Submit testnet applications, repositories, and links to earn massive Builder XP.</p>
+          </div>
+          
+          <button
+            onClick={() => setShowProjForm(!showProjForm)}
+            className="flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-kii-purple to-kii-blue text-white rounded-lg text-xs font-bold hover:opacity-95 transition-opacity"
+          >
+            <Plus className="w-4 h-4" />
+            {showProjForm ? "Hide Form" : "Publish Project"}
+          </button>
+        </div>
+
+        {/* Create Form */}
+        {showProjForm && (
+          <form onSubmit={handleCreateProject} className="p-5 bg-zinc-950 border border-brand-border rounded-xl max-w-2xl space-y-4">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Publish New Testnet Application</h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-zinc-400 font-bold uppercase">Project Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. KiiSwap AMM Protocol"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-brand-black border border-brand-border rounded-lg text-xs text-white placeholder-zinc-700 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-zinc-400 font-bold uppercase">Tagline / Description</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. A fast decentralized swap built on KiiChain v3"
+                  value={projectDesc}
+                  onChange={(e) => setProjectDesc(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-brand-black border border-brand-border rounded-lg text-xs text-white placeholder-zinc-700 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-zinc-400 font-bold uppercase flex items-center gap-1">
+                  <Github className="w-3.5 h-3.5" />
+                  GitHub Repository (Optional)
+                </label>
+                <input
+                  type="url"
+                  placeholder="e.g. https://github.com/user/project"
+                  value={projectGit}
+                  onChange={(e) => setProjectGit(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-brand-black border border-brand-border rounded-lg text-xs text-white placeholder-zinc-700 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-zinc-400 font-bold uppercase flex items-center gap-1">
+                  <Globe className="w-3.5 h-3.5" />
+                  Live Demo URL (Optional)
+                </label>
+                <input
+                  type="url"
+                  placeholder="e.g. https://kiiswap.vercel.app"
+                  value={projectDemo}
+                  onChange={(e) => setProjectDemo(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-brand-black border border-brand-border rounded-lg text-xs text-white placeholder-zinc-700 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-brand-border/40">
+              <span className="text-[10px] text-zinc-500 font-bold font-mono self-center mr-auto">
+                Potential Rewards: Up to +100 XP
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowProjForm(false)}
+                className="px-4 py-2 bg-white/[0.02] border border-brand-border text-white text-xs font-bold rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-gradient-to-r from-kii-purple to-kii-blue text-white text-xs font-bold rounded-lg"
+              >
+                Submit Project
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Projects List */}
+        {projects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {projects.map((proj) => (
+              <div key={proj.id} className="p-5 bg-zinc-950/80 border border-brand-border rounded-xl flex flex-col justify-between gap-5 relative group">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-white group-hover:text-kii-blue-light transition-colors">{proj.name}</h4>
+                    <span className="text-[10px] font-mono font-bold text-zinc-500 px-2 py-0.5 rounded bg-zinc-900 border border-brand-border flex items-center gap-1">
+                      <Flame className="w-3.5 h-3.5 text-amber-500" />
+                      {proj.visits} visits
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-400 leading-normal">{proj.description}</p>
+                </div>
+
+                <div className="flex items-center gap-3 border-t border-brand-border/40 pt-3 text-[10px] font-bold font-mono">
+                  {proj.githubUrl && (
+                    <a 
+                      href={proj.githubUrl} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="text-zinc-300 hover:text-white flex items-center gap-1 hover:underline"
+                    >
+                      <Github className="w-3.5 h-3.5" />
+                      Repository
+                      <ExternalLink className="w-3 h-3 text-zinc-500" />
+                    </a>
+                  )}
+
+                  {proj.demoUrl && (
+                    <a 
+                      href={proj.demoUrl} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="text-zinc-300 hover:text-white flex items-center gap-1 hover:underline ml-3"
+                    >
+                      <Globe className="w-3.5 h-3.5 text-kii-blue" />
+                      Demo Link
+                      <ExternalLink className="w-3 h-3 text-zinc-500" />
+                    </a>
+                  )}
+
+                  <button
+                    onClick={() => simulateProjectVisit(proj.id, 10)}
+                    className="ml-auto py-1 px-2.5 rounded bg-kii-purple/10 text-kii-purple-light border border-kii-purple/20 hover:text-white hover:border-kii-purple/40 transition-colors font-sans"
+                    title="Simulate user traffic to verify Level milestones"
+                  >
+                    Simulate 10 Visits
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-12 text-center text-zinc-600 font-medium">
+            No projects submitted yet. Create one above to claim your Kii Pioneer badge and XP bonuses!
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

@@ -1,0 +1,197 @@
+"use client";
+
+import React from "react";
+import { useWallet } from "../contexts/WalletContext";
+import { useQuests } from "../contexts/QuestContext";
+import { 
+  ArrowRight, 
+  Activity, 
+  Layers, 
+  Zap,
+  Wallet,
+  Compass
+} from "lucide-react";
+import Link from "next/link";
+
+export default function Dashboard() {
+  const { 
+    isConnected, 
+    walletType, 
+    displayAddress, 
+    balance, 
+    connectWallet
+  } = useWallet();
+
+  const { completionPercentage } = useQuests();
+
+  const networkDetails = {
+    cosmosId: "oro_1336_1",
+    evmChainId: "1336",
+    bech32: "kii"
+  };
+
+  return (
+    <div className="space-y-10">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden rounded-2xl border border-brand-border bg-gradient-to-br from-brand-black/90 to-brand-dark/80 p-8 md:p-12 shadow-2xl">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-gradient-to-bl from-kii-purple/10 to-kii-blue/5 blur-[80px] pointer-events-none" />
+        
+        <div className="max-w-2xl space-y-6 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-kii-purple/10 border border-kii-purple/20 text-xs font-semibold text-kii-purple-light">
+            <span className="w-1.5 h-1.5 rounded-full bg-kii-purple animate-pulse" />
+            KiiChain Testnet Onboarding
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
+            Build on <span className="bg-gradient-to-r from-kii-purple-light to-kii-blue bg-clip-text text-transparent">KiiChain Testnet</span>
+          </h1>
+          
+          <p className="text-zinc-400 text-base md:text-lg font-medium leading-relaxed">
+            Access tools, faucet, explorer, contract deployment templates, and testnet quests from one place.
+          </p>
+
+          <div className="flex flex-col gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-3">
+              {isConnected ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 px-5 py-3 rounded-xl bg-kii-purple/20 border border-kii-purple/35 text-white font-bold text-xs tracking-wider uppercase">
+                    <Wallet className="w-4 h-4 text-kii-blue" />
+                    Wallet Connected
+                  </div>
+                  <Link
+                    href="/getting-started"
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-kii-purple to-kii-blue hover:opacity-90 font-bold text-xs tracking-wider uppercase text-white shadow-xl shadow-kii-purple/15 transition-opacity"
+                  >
+                    Get Started Onboarding
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              ) : (
+                <button
+                  onClick={() => connectWallet("metamask")}
+                  className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-kii-purple to-kii-blue hover:opacity-90 font-bold text-xs tracking-wider uppercase text-white shadow-xl shadow-kii-purple/15 transition-all cursor-pointer"
+                >
+                  <Wallet className="w-4 h-4" />
+                  Connect Wallet
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Overview Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {/* Wallet Balances Card */}
+        <div className="glass-panel rounded-xl p-6 flex flex-col justify-between h-[220px]">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Connected Wallet</span>
+              <span className="text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded text-kii-purple-light bg-kii-purple/10 border border-kii-purple/20">
+                KiiChain Testnet
+              </span>
+            </div>
+
+            {isConnected ? (
+              <div className="space-y-2">
+                <span className="text-[10px] text-zinc-500 font-medium">Available Balance</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl font-extrabold text-white tracking-tight">{balance}</span>
+                  <span className="text-sm font-bold text-kii-blue">KII</span>
+                </div>
+                <div className="text-[11px] text-zinc-400 font-mono truncate max-w-xs pt-1">
+                  Address: {displayAddress}
+                </div>
+              </div>
+            ) : (
+              <div className="py-4 text-center">
+                <p className="text-xs text-zinc-500 mb-3">No wallet connected. Link your MetaMask or Cosmos provider to start.</p>
+                <button
+                  onClick={() => connectWallet("metamask")}
+                  className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded bg-white/[0.04] hover:bg-white/[0.08] text-white border border-brand-border text-xs font-bold transition-all"
+                >
+                  <Wallet className="w-3.5 h-3.5 text-kii-blue" />
+                  Quick Connect
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-zinc-500 border-t border-brand-border pt-3">
+            <Activity className="w-3.5 h-3.5 text-kii-purple" />
+            <span>Dual Wallet Engine Support Enabled</span>
+          </div>
+        </div>
+
+        {/* Builder Milestones */}
+        <div className="glass-panel rounded-xl p-6 flex flex-col justify-between h-[220px]">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Builder Milestones</span>
+              <span className="text-xs font-extrabold text-kii-blue">{completionPercentage}%</span>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-zinc-400">Onboarding Progress</span>
+                <span className="font-semibold text-white">{completionPercentage === 100 ? "Completed" : "In Progress"}</span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-white/[0.03] border border-white/[0.05] overflow-hidden">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-kii-purple to-kii-blue transition-all duration-500" 
+                  style={{ width: `${completionPercentage}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-zinc-500 leading-normal pt-1">
+                Complete onboarding quests (claiming faucet tokens and deploying templates) to earn your badges.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-zinc-500 border-t border-brand-border pt-3">
+            <Link href="/quests" className="text-kii-purple-light hover:underline font-semibold flex items-center gap-1">
+              View Quest Board
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Launchpad Grid */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-bold text-white">Onboarding Tools</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Launchpad Card Faucet */}
+          <Link href="/faucet" className="glass-panel p-5 rounded-xl hover:border-brand-border-purple/45 hover:-translate-y-0.5 transition-all duration-200 group">
+            <Zap className="w-5 h-5 text-kii-purple mb-4 group-hover:scale-110 transition-transform" />
+            <h3 className="text-sm font-bold text-white group-hover:text-kii-purple-light transition-colors">Request Faucet</h3>
+            <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+              Get free testnet KII tokens directly to your EVM or Cosmos address for deployment gas.
+            </p>
+          </Link>
+
+          {/* Launchpad Card Deploy */}
+          <Link href="/deploy" className="glass-panel p-5 rounded-xl hover:border-brand-border-blue/45 hover:-translate-y-0.5 transition-all duration-200 group">
+            <Layers className="w-5 h-5 text-kii-blue mb-4 group-hover:scale-110 transition-transform" />
+            <h3 className="text-sm font-bold text-white group-hover:text-kii-blue-light transition-colors">Contract Templates</h3>
+            <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+              Deploy pre-audited ERC20, NFT, Faucet, and DAO contract templates in one click.
+            </p>
+          </Link>
+
+          {/* Launchpad Card Wallet */}
+          <Link href="/wallet-tools" className="glass-panel p-5 rounded-xl hover:border-brand-border-blue/45 hover:-translate-y-0.5 transition-all duration-200 group">
+            <Wallet className="w-5 h-5 text-white mb-4 group-hover:scale-110 transition-transform" />
+            <h3 className="text-sm font-bold text-white group-hover:text-zinc-300 transition-colors">Wallet Diagnostics</h3>
+            <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+              Configure MetaMask automatically and inspect Leap and Keplr extension values.
+            </p>
+          </Link>
+
+        </div>
+      </section>
+    </div>
+  );
+}
