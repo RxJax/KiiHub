@@ -675,17 +675,17 @@ export default function Dashboard() {
               </div>
 
               {/* Action buttons */}
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 w-full">
                 <Link
                   href="/getting-started"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-kii-purple to-kii-blue hover:opacity-90 font-bold text-xs tracking-wider uppercase text-white shadow-xl shadow-kii-purple/15 transition-opacity"
+                  className="flex w-full sm:w-auto justify-center items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-kii-purple to-kii-blue hover:opacity-90 font-bold text-xs tracking-wider uppercase text-white shadow-xl shadow-kii-purple/15 transition-opacity"
                 >
                   <Zap className="w-3.5 h-3.5" />
                   Start Building
                 </Link>
                 <a
                   href="#popular-tools"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-950/60 border border-brand-border hover:border-zinc-700 hover:text-white font-bold text-xs tracking-wider uppercase text-zinc-400 transition-colors cursor-pointer"
+                  className="flex w-full sm:w-auto justify-center items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-950/60 border border-brand-border hover:border-zinc-700 hover:text-white font-bold text-xs tracking-wider uppercase text-zinc-400 transition-colors cursor-pointer"
                 >
                   <Compass className="w-3.5 h-3.5" />
                   Explore Tools
@@ -1055,7 +1055,7 @@ export default function Dashboard() {
               Quick Actions
             </span>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {quickActions.map((action) => {
                 const Icon = action.icon;
                 return (

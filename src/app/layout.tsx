@@ -1,9 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { QuestProvider } from "@/contexts/QuestContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 import { ClientLayout } from "@/components/ClientLayout";
 
 const geistSans = Geist({
@@ -29,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased overflow-x-hidden`}
       suppressHydrationWarning
     >
       <head suppressHydrationWarning>

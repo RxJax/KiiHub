@@ -1940,7 +1940,7 @@ export default function KiiSwapDEX() {
                 {/* Asset Pair Config Row */}
                 <div className="space-y-2 text-left">
                   <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Select Liquidity Pair</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {["KII / USDT", "KII / USDC", "KII / wBTC"].map((pair, idx) => (
                       <div
                         key={pair}

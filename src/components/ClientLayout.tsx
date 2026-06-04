@@ -67,7 +67,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
       <Sidebar isOpen={isSidebarOpen} onClose={handleCloseSidebar} />
 
       {/* Main Area */}
-      <div className="flex-1 min-h-screen lg:pl-64 pl-0 flex flex-col relative">
+      <div className="flex-1 min-h-screen lg:pl-64 pl-0 flex flex-col relative overflow-x-hidden w-full">
         {/* Background Glows and Grid */}
         <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
         

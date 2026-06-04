@@ -294,7 +294,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="relative overflow-hidden min-h-screen -mx-8 -my-10 px-8 py-10 transition-colors duration-300 bg-slate-50 dark:bg-[#0B0C10]">
+    <div className="relative overflow-hidden min-h-screen -mx-4 lg:-mx-8 -my-6 lg:-my-10 px-4 lg:px-8 py-6 lg:py-10 transition-colors duration-300 bg-slate-50 dark:bg-[#0B0C10]">
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes mythic-pulse {
           0%, 100% { box-shadow: 0 0 15px rgba(124, 58, 237, 0.25), 0 0 5px rgba(239, 68, 68, 0.15); }
