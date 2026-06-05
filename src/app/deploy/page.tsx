@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useWallet } from "@/contexts/WalletContext";
+import { useQuests } from "@/contexts/QuestContext";
 import { 
   Code, 
   Settings, 
@@ -80,7 +81,8 @@ const TEMPLATES: ContractTemplate[] = [
 ];
 
 export default function Deploy() {
-  const { isConnected, walletType, executeContractDeployment } = useWallet();
+  const { isConnected, walletType, executeContractDeployment, displayAddress } = useWallet();
+  const { addXp } = useQuests();
   const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
   const [formParams, setFormParams] = useState<{ [key: string]: string }>({});
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
@@ -138,9 +140,33 @@ export default function Deploy() {
           contractAddress: `Token: ${tokenRes.contractAddress}\nNFT Collection: ${nftRes.contractAddress}`,
           txHash: `Token Deploy: ${tokenRes.txHash}\nNFT Deploy: ${nftRes.txHash}`
         });
+
+        // Award one-time deployment XP
+        if (displayAddress) {
+          const userAddr = displayAddress.toLowerCase();
+          const xpKey = `kii_deploy_xp_awarded_${selectedTemplate.id}_${userAddr}`;
+          const alreadyAwarded = localStorage.getItem(xpKey);
+          if (!alreadyAwarded) {
+            addXp(200);
+            localStorage.setItem(xpKey, "true");
+          }
+        }
       } else {
         const res = await executeContractDeployment(selectedTemplate.id, formParams);
         setDeployResult(res);
+
+        // Award one-time deployment XP
+        if (res.success && displayAddress) {
+          const userAddr = displayAddress.toLowerCase();
+          const xpKey = `kii_deploy_xp_awarded_${selectedTemplate.id}_${userAddr}`;
+          const alreadyAwarded = localStorage.getItem(xpKey);
+          if (!alreadyAwarded) {
+            let xpToAward = 100;
+            if (selectedTemplate.id === "swap-pool") xpToAward = 300;
+            addXp(xpToAward);
+            localStorage.setItem(xpKey, "true");
+          }
+        }
       }
     } catch (err: any) {
       setDeployResult({
@@ -176,7 +202,7 @@ export default function Deploy() {
               <span className="text-4xl select-none animate-rocket hover:scale-110 active:scale-95 transition-transform duration-300 cursor-pointer" title="Deploying is rocket science!">🚀</span>
             </h1>
             <p className="text-zinc-400 text-xs mt-1">
-              Deploy pre-compiled smart contract templates directly to KiiChain in one click.
+              Deploy pre-compiled smart contract templates directly to KiiChain in one click. <span className="text-kii-teal font-semibold">(XP rewards are one-time only per template)</span>
             </p>
           </div>
         </div>
@@ -190,26 +216,26 @@ export default function Deploy() {
           let themeBorder = "hover:border-pink-500/35";
           let iconBg = "bg-pink-500/10 border-pink-500/30 text-pink-400";
           let textColor = "text-pink-400";
-          let xpReward = "+200 XP";
+          let xpReward = "+200 XP (ONE-TIME)";
           
           if (tpl.id === "token") {
             themeColor = "from-amber-500 to-orange-600";
             themeBorder = "hover:border-orange-500/35";
             iconBg = "bg-orange-500/10 border-orange-500/30 text-orange-400";
             textColor = "text-orange-400";
-            xpReward = "+100 XP";
+            xpReward = "+100 XP (ONE-TIME)";
           } else if (tpl.id === "nft") {
             themeColor = "from-cyan-500 to-blue-600";
             themeBorder = "hover:border-cyan-500/35";
             iconBg = "bg-cyan-500/10 border-cyan-500/30 text-cyan-400";
             textColor = "text-cyan-400";
-            xpReward = "+100 XP";
+            xpReward = "+100 XP (ONE-TIME)";
           } else if (tpl.id === "swap-pool") {
             themeColor = "from-purple-500 to-indigo-600";
             themeBorder = "hover:border-purple-500/35";
             iconBg = "bg-purple-500/10 border-purple-500/30 text-purple-400";
             textColor = "text-purple-400";
-            xpReward = "+300 XP";
+            xpReward = "+300 XP (ONE-TIME)";
           }
 
           return (
