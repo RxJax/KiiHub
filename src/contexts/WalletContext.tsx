@@ -540,40 +540,40 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               details: `Contract deployed by ${fromAddr.slice(0, 6)}...${fromAddr.slice(-4)}`
             });
           }
-          else if (toAddr.toLowerCase() === "0x66A635D839bd99AcA93647B53B43C4d3a16Ea541".toLowerCase() && value === ethers.parseEther("1")) {
+          else if (toAddr.toLowerCase() === fromAddr.toLowerCase() && value === BigInt(0)) {
             const lastChar = hash.slice(-1).toLowerCase();
             const lastVal = parseInt(lastChar, 16);
             
             let gamePlayed = "Dice Roll";
-            let xpEarned = 5;
-            let detailSuffix = "played Dice Roll and earned 5 XP (Base)";
+            let xpEarned = 15;
+            let detailSuffix = "rolled Dice Roll and earned 15 XP (Base)";
 
             if (lastVal % 3 === 0) {
               gamePlayed = "Crypto Slots";
               if (lastVal % 6 === 0) {
-                xpEarned = 65;
-                detailSuffix = "spun the Slots and hit the COMBO! (+65 XP)";
+                xpEarned = 100;
+                detailSuffix = "spun the Slots and hit the COMBO! (+100 XP)";
               } else {
-                xpEarned = 25;
-                detailSuffix = "spun the Slots and earned +25 XP";
+                xpEarned = 45;
+                detailSuffix = "spun the Slots and earned +45 XP";
               }
             } else if (lastVal % 3 === 1) {
               gamePlayed = "Lucky Number";
               if (lastVal > 10) {
-                xpEarned = 35;
-                detailSuffix = "guessed the Lucky Number and won +35 XP";
+                xpEarned = 120;
+                detailSuffix = "guessed the Lucky Number and won +120 XP";
               } else {
-                xpEarned = 5;
-                detailSuffix = "guessed the Lucky Number and earned 5 XP (Base)";
+                xpEarned = 15;
+                detailSuffix = "guessed the Lucky Number and earned 15 XP (Base)";
               }
             } else {
               gamePlayed = "Dice Roll";
               if (lastVal > 8) {
-                xpEarned = 50;
-                detailSuffix = "rolled double on Dice Roll and won +50 XP";
+                xpEarned = 150;
+                detailSuffix = "rolled double on Dice Roll and won +150 XP";
               } else {
-                xpEarned = 5;
-                detailSuffix = "rolled Dice Roll and earned 5 XP (Base)";
+                xpEarned = 15;
+                detailSuffix = "rolled Dice Roll and earned 15 XP (Base)";
               }
             }
 
@@ -1510,8 +1510,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                      actionName.toLowerCase().includes("slots") || 
                      actionName.toLowerCase().includes("lucky");
 
-    const toAddress = isArcade ? "0x66A635D839bd99AcA93647B53B43C4d3a16Ea541" : (evmAddress || "0x0000000000000000000000000000000000000000");
-    const valueEth = isArcade ? "1" : "0";
+    const toAddress = isEvmWallet(walletType) ? (evmAddress || "0x0000000000000000000000000000000000000000") : "0x0000000000000000000000000000000000000000";
+    const valueEth = "0";
 
     const providerObj = getEvmProviderObject(walletType);
     if (isEvmWallet(walletType) && evmAddress && providerObj) {
@@ -1535,7 +1535,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           gasUsed,
           blockNumber,
           details: isArcade 
-            ? `${actionName} transaction executed: paid 1 KII to developer wallet` 
+            ? `${actionName} transaction executed: paid gas fee` 
             : `${actionName} transaction executed on-chain via EVM Wallet`
         });
         
@@ -1556,7 +1556,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const currentAddress = (displayAddress || "0x_demo_user").toLowerCase();
       const balanceKey = `kii_balance_${currentAddress}`;
       const currentBal = Number(localStorage.getItem(balanceKey) || balance || "10.00");
-      const deductAmount = isArcade ? 1 : simulatedGasFeeKii;
+      const deductAmount = simulatedGasFeeKii;
       const nextBal = Math.max(0, currentBal - deductAmount);
       
       localStorage.setItem(balanceKey, nextBal.toFixed(4));
@@ -1570,7 +1570,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         gasUsed: "21000",
         blockNumber: latestBlock + 1,
         details: isArcade 
-          ? `${actionName}: paid 1 KII to developer wallet (Simulated)` 
+          ? `${actionName}: paid gas fee (Simulated)` 
           : `${actionName} simulated transaction completed`
       });
       
