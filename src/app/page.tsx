@@ -720,65 +720,90 @@ export default function Dashboard() {
             
             {/* CARD 1: MY WALLET */}
             <div className="glass-panel rounded-xl p-5 flex flex-col justify-between min-h-[175px] text-left">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">My Wallet</span>
-                    <span className="text-[8px] font-extrabold text-white uppercase tracking-wider bg-kii-blue bg-opacity-80 px-1 rounded">KII</span>
-                  </div>
-                  <ChevronDown className="w-3.5 h-3.5 text-zinc-500 -rotate-90" />
-                </div>
+              {isConnected ? (
+                <>
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">My Wallet</span>
+                        <span className="text-[8px] font-extrabold text-white uppercase tracking-wider bg-kii-blue bg-opacity-80 px-1 rounded">KII</span>
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 text-zinc-500 -rotate-90" />
+                    </div>
 
-                <div className="space-y-1">
-                  <div className="text-2xl font-black text-white tracking-tight leading-none">
-                    {isConnected ? balance : "1.4895"} <span className="text-xs font-bold text-kii-blue">KII</span>
+                    <div className="space-y-1">
+                      <div className="text-2xl font-black text-white tracking-tight leading-none">
+                        {balance} <span className="text-xs font-bold text-kii-blue">KII</span>
+                      </div>
+                      <div className="text-[10px] text-zinc-500 font-semibold">$0.00 USD</div>
+                    </div>
                   </div>
-                  <div className="text-[10px] text-zinc-500 font-semibold">$0.00 USD</div>
-                </div>
-              </div>
 
-              <div className="mt-3">
-                {/* SVG sparkline */}
-                <svg className="w-full h-8" viewBox="0 0 100 30" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="walletGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6366F1" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#6366F1" stopOpacity="0.0" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M 0 22 Q 10 12 25 18 T 50 8 T 75 14 T 100 4" fill="none" stroke="#6366F1" strokeWidth="1.5" strokeLinecap="round" />
-                  <path d="M 0 22 Q 10 12 25 18 T 50 8 T 75 14 T 100 4 L 100 30 L 0 30 Z" fill="url(#walletGlow)" />
-                </svg>
+                  <div className="mt-3">
+                    {/* SVG sparkline */}
+                    <svg className="w-full h-8" viewBox="0 0 100 30" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="walletGlow" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#6366F1" stopOpacity="0.25" />
+                          <stop offset="100%" stopColor="#6366F1" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M 0 22 Q 10 12 25 18 T 50 8 T 75 14 T 100 4" fill="none" stroke="#6366F1" strokeWidth="1.5" strokeLinecap="round" />
+                      <path d="M 0 22 Q 10 12 25 18 T 50 8 T 75 14 T 100 4 L 100 30 L 0 30 Z" fill="url(#walletGlow)" />
+                    </svg>
 
-                <div className="flex items-center justify-between border-t border-brand-border/40 pt-2.5 mt-2">
-                  <div className="font-mono text-[9px] text-zinc-400 truncate max-w-[100px]">
-                    {isConnected && displayAddress ? displayAddress : "0x6A6A...a541"}
+                    <div className="flex items-center justify-between border-t border-brand-border/40 pt-2.5 mt-2">
+                      <div className="font-mono text-[9px] text-zinc-400 truncate max-w-[100px]">
+                        {displayAddress}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button 
+                          onClick={handleCopy}
+                          className="p-1 rounded hover:bg-white/[0.04] text-zinc-500 hover:text-white transition-colors"
+                          title="Copy Address"
+                        >
+                          {copied ? <Check className="w-3 h-3 text-kii-teal" /> : <Copy className="w-3 h-3" />}
+                        </button>
+                        <button 
+                          onClick={() => setShowQr(!showQr)}
+                          className="p-1 rounded hover:bg-white/[0.04] text-zinc-500 hover:text-white transition-colors relative"
+                          title="Show QR Code"
+                        >
+                          <QrCode className="w-3 h-3" />
+                          {showQr && (
+                            <div className="absolute bottom-6 right-0 p-2 rounded-lg bg-zinc-950 border border-brand-border shadow-2xl z-50">
+                              <div className="w-20 h-20 bg-white flex items-center justify-center rounded">
+                                <span className="text-[10px] text-black font-mono font-bold">QR Mock</span>
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <button 
-                      onClick={handleCopy}
-                      className="p-1 rounded hover:bg-white/[0.04] text-zinc-500 hover:text-white transition-colors"
-                      title="Copy Address"
-                    >
-                      {copied ? <Check className="w-3 h-3 text-kii-teal" /> : <Copy className="w-3 h-3" />}
-                    </button>
-                    <button 
-                      onClick={() => setShowQr(!showQr)}
-                      className="p-1 rounded hover:bg-white/[0.04] text-zinc-500 hover:text-white transition-colors relative"
-                      title="Show QR Code"
-                    >
-                      <QrCode className="w-3 h-3" />
-                      {showQr && (
-                        <div className="absolute bottom-6 right-0 p-2 rounded-lg bg-zinc-950 border border-brand-border shadow-2xl z-50">
-                          <div className="w-20 h-20 bg-white flex items-center justify-center rounded">
-                            <span className="text-[10px] text-black font-mono font-bold">QR Mock</span>
-                          </div>
-                        </div>
-                      )}
-                    </button>
+                </>
+              ) : (
+                <div className="flex flex-col justify-between h-full flex-1">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">My Wallet</span>
+                        <span className="text-[8px] font-extrabold text-white uppercase tracking-wider bg-kii-blue bg-opacity-80 px-1 rounded">KII</span>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 font-medium leading-relaxed mt-1">
+                      Connect your developer wallet to view your live KII and token balances.
+                    </p>
                   </div>
+                  <button
+                    onClick={() => connectWallet("metamask")}
+                    className="w-full mt-3 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-gradient-to-r from-kii-purple to-kii-blue hover:opacity-90 font-bold text-[10px] uppercase tracking-wider text-white transition-all shadow-md shadow-kii-purple/10 cursor-pointer animate-pulse-glow"
+                  >
+                    <Wallet className="w-3 h-3" />
+                    Connect Wallet
+                  </button>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* CARD 2: BUILDER PROGRESS */}
@@ -1005,7 +1030,7 @@ export default function Dashboard() {
               <div className="space-y-1">
                 <div className="flex justify-between text-[8.5px] text-zinc-500 uppercase font-bold">
                   <span>From</span>
-                  <span>Balance: {isConnected ? balance : "1.4895"}</span>
+                  <span>Balance: {isConnected ? balance : "0.00"}</span>
                 </div>
                 <div className="flex items-center justify-between bg-zinc-900/60 p-2 rounded-lg border border-brand-border">
                   <input
