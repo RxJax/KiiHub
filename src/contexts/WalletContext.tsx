@@ -918,27 +918,27 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       type = "Arcade Game";
       if (txTypeLower.includes("coin") || txTypeLower.includes("flip")) {
         gamePlayed = "Coin Flip";
-        xpEarned = details.toLowerCase().includes("win") || details.toLowerCase().includes("guessed right") ? 20 : 5;
+        xpEarned = details.toLowerCase().includes("win") || details.toLowerCase().includes("guessed right") ? 90 : 15;
       } else if (txTypeLower.includes("dice") || txTypeLower.includes("roll")) {
         gamePlayed = "Dice Roll";
-        xpEarned = details.toLowerCase().includes("double") ? 50 : 5;
+        xpEarned = details.toLowerCase().includes("double") ? 150 : 15;
       } else if (txTypeLower.includes("slots") || txTypeLower.includes("spin")) {
         gamePlayed = "Crypto Slots";
         if (details.toLowerCase().includes("quadruple")) {
-          xpEarned = 65;
+          xpEarned = 200;
         } else if (details.toLowerCase().includes("triple")) {
-          xpEarned = 35;
+          xpEarned = 100;
         } else if (details.toLowerCase().includes("double")) {
-          xpEarned = 15;
+          xpEarned = 45;
         } else {
-          xpEarned = 5;
+          xpEarned = 15;
         }
       } else if (txTypeLower.includes("lucky") || txTypeLower.includes("guess") || txTypeLower.includes("number")) {
         gamePlayed = "Lucky Number";
-        xpEarned = details.toLowerCase().includes("perfect") || details.toLowerCase().includes("won") ? 35 : 5;
+        xpEarned = details.toLowerCase().includes("perfect") || details.toLowerCase().includes("won") ? 120 : 15;
       } else {
         gamePlayed = "Arcade Game";
-        xpEarned = 5;
+        xpEarned = 15;
       }
     } else if (txTypeLower.includes("stake") || txTypeLower.includes("staking")) {
       type = "Staking";

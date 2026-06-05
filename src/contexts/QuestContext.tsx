@@ -377,7 +377,6 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
 
 const DAILY_QUESTS_POOL: Omit<DailyChallenge, "completed" | "progress">[] = [
   { id: "daily_tx_3", title: "Send 3 Transactions", description: "Perform 3 transactions on KiiChain.", xp: 10, target: 3 },
-  { id: "daily_deploy_1", title: "Deploy 1 Contract", description: "Deploy any template smart contract.", xp: 20, target: 1 },
   { id: "daily_interact_2", title: "Interact with Contracts", description: "Perform 2 smart contract interactions.", xp: 15, target: 2 },
   { id: "daily_explorer", title: "Visit Explorer", description: "Open and load the block explorer page.", xp: 5, target: 1 },
   { id: "daily_claim_faucet", title: "Claim Faucet", description: "Request gas tokens from the portal faucet.", xp: 5, target: 1 },
@@ -387,7 +386,6 @@ const DAILY_QUESTS_POOL: Omit<DailyChallenge, "completed" | "progress">[] = [
 ];
 
 const INITIAL_WEEKLY_MISSIONS: WeeklyMission[] = [
-  { id: "weekly_deploy_3", title: "Deploy 3 Contracts", description: "Launch 3 separate templates instances.", xp: 50, completed: false, progress: 0, target: 3 },
   { id: "weekly_tx_25", title: "Reach 25 Transactions", description: "Process 25 testnet block operations.", xp: 75, completed: false, progress: 0, target: 25 },
   { id: "weekly_all_dailies", title: "Complete All Daily Quests", description: "Execute 10 daily challenge tasks.", xp: 60, completed: false, progress: 0, target: 10 },
   { id: "weekly_submit_project", title: "Submit New Project", description: "Publish a repository or demo link.", xp: 100, completed: false, progress: 0, target: 1 },
@@ -520,7 +518,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 currentDate.getUTCMonth() !== completedDate.getUTCMonth() ||
                 currentDate.getUTCDate() !== completedDate.getUTCDate();
                 
-              if (isDifferentDay) {
+              if (isDifferentDay && initial.category !== "deploy") {
                 changed = true;
                 completed = false;
                 completedAt = undefined;
@@ -780,7 +778,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Reset all completed quests to simulate 24 hours passing
     setQuests((prev) => {
-      const copy = prev.map((q) => ({ ...q, completed: false, completedAt: undefined }));
+      const copy = prev.map((q) => q.category === "deploy" ? q : { ...q, completed: false, completedAt: undefined });
       saveState("kii_quests_v2", copy);
       return copy;
     });
@@ -835,7 +833,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               currentDate.getUTCMonth() !== completedDate.getUTCMonth() ||
               currentDate.getUTCDate() !== completedDate.getUTCDate();
               
-            if (isDifferentDay) {
+            if (isDifferentDay && q.category !== "deploy") {
               changed = true;
               return { ...q, completed: false, completedAt: undefined };
             }
@@ -971,15 +969,11 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       if (latestTx.type.includes("Deploy Token")) {
         completeQuest("deploy_token");
-        incrementDailyChallenge("daily_deploy_1");
-        incrementWeeklyMission("weekly_deploy_3");
         incrementDailyChallenge("daily_complete_5");
       }
       if (latestTx.type.includes("Deploy NFT")) {
         completeQuest("deploy_nft");
         unlockAchievement("nft_creator");
-        incrementDailyChallenge("daily_deploy_1");
-        incrementWeeklyMission("weekly_deploy_3");
         incrementDailyChallenge("daily_complete_5");
       }
       if (latestTx.type.includes("Interaction") || latestTx.type.includes("Transfer")) {

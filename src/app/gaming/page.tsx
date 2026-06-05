@@ -363,8 +363,8 @@ export default function GamingArcade() {
       setCoinResult(finalOutcome);
 
       const won = finalOutcome === coinPrediction;
-      const baseXP = 5;
-      const winXP = won ? 15 : 0;
+      const baseXP = 15;
+      const winXP = won ? 75 : 0;
       const totalEarned = baseXP + winXP;
 
       addXp(totalEarned);
@@ -423,8 +423,8 @@ export default function GamingArcade() {
 
       // Double match required for 1/36 win condition
       const won = d1 === dicePrediction && d2 === dicePrediction;
-      const baseXP = 5;
-      const winXP = won ? 45 : 0;
+      const baseXP = 15;
+      const winXP = won ? 135 : 0;
       const totalEarned = baseXP + winXP;
 
       addXp(totalEarned);
@@ -438,7 +438,7 @@ export default function GamingArcade() {
         status: "success",
         gasUsed: "21000",
         blockNumber: latestBlock + 1,
-        details: `${displayAddress ? displayAddress.slice(0, 6) + "..." + displayAddress.slice(-4) : "Guest"} ${won ? "rolled double on Dice Roll and won +50 XP" : "rolled Dice Roll and earned 5 XP (Base)"}`
+        details: `${displayAddress ? displayAddress.slice(0, 6) + "..." + displayAddress.slice(-4) : "Guest"} ${won ? "rolled double on Dice Roll and won +150 XP" : "rolled Dice Roll and earned 15 XP (Base)"}`
       });
 
       if (won) {
@@ -517,31 +517,31 @@ export default function GamingArcade() {
       let winXP = 0;
       let status: "win" | "lose" | "combo" = "lose";
       let msg = "";
-      let detailSuffix = "spun the Slots and earned 5 XP (Base)";
+      let detailSuffix = "spun the Slots and earned 15 XP (Base)";
 
       if (maxMatch === 4) {
-        winXP = 60;
+        winXP = 185;
         status = "combo";
-        msg = "QUADRUPLE MATCH COMBO! Perfect matching reels (+60 XP)!";
-        detailSuffix = "spun the Slots and hit the COMBO! (+65 XP)";
+        msg = "QUADRUPLE MATCH COMBO! Perfect matching reels (+185 XP)!";
+        detailSuffix = "spun the Slots and hit the COMBO! (+200 XP)";
         unlockAchievement("kii_gamer_badge");
       } else if (maxMatch === 3) {
+        winXP = 85;
+        status = "win";
+        msg = "Triple match combo! Excellent spin! (+85 XP)";
+        detailSuffix = "spun the Slots and earned +100 XP";
+      } else if (maxMatch === 2) {
         winXP = 30;
         status = "win";
-        msg = "Triple match combo! Excellent spin! (+30 XP)";
-        detailSuffix = "spun the Slots and earned +35 XP";
-      } else if (maxMatch === 2) {
-        winXP = 10;
-        status = "win";
-        msg = "Double match! Nice spin! (+10 XP)";
-        detailSuffix = "spun the Slots and earned +15 XP";
+        msg = "Double match! Nice spin! (+30 XP)";
+        detailSuffix = "spun the Slots and earned +45 XP";
       } else {
         winXP = 0;
         status = "lose";
         msg = "No matches. Give the reels another pull!";
       }
 
-      const baseXP = 5;
+      const baseXP = 15;
       const totalEarned = baseXP + winXP;
 
       addXp(totalEarned);
@@ -591,8 +591,8 @@ export default function GamingArcade() {
       setLuckyResult(val);
 
       const won = val === luckyPrediction;
-      const baseXP = 5;
-      const winXP = won ? 30 : 0;
+      const baseXP = 15;
+      const winXP = won ? 105 : 0;
       const totalEarned = baseXP + winXP;
 
       addXp(totalEarned);
@@ -606,7 +606,7 @@ export default function GamingArcade() {
         status: "success",
         gasUsed: "21000",
         blockNumber: latestBlock + 1,
-        details: `${displayAddress ? displayAddress.slice(0, 6) + "..." + displayAddress.slice(-4) : "Guest"} ${won ? "guessed the Lucky Number and won +35 XP" : "guessed the Lucky Number and earned 5 XP (Base)"}`
+        details: `${displayAddress ? displayAddress.slice(0, 6) + "..." + displayAddress.slice(-4) : "Guest"} ${won ? "guessed the Lucky Number and won +120 XP" : "guessed the Lucky Number and earned 15 XP (Base)"}`
       });
 
       if (won) {
