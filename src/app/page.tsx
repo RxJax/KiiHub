@@ -329,7 +329,7 @@ export default function Dashboard() {
   // Find daily quest progress from context
   const dailyQuest = dailyChallenges.find(c => c.id === "daily_tx_3") || {
     title: "Send 3 Transactions",
-    progress: 2,
+    progress: 0,
     target: 3,
     xp: 50,
     completed: false
