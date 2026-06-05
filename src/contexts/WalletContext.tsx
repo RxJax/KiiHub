@@ -540,40 +540,56 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               details: `Contract deployed by ${fromAddr.slice(0, 6)}...${fromAddr.slice(-4)}`
             });
           }
-          else if (toAddr.toLowerCase() === "0x000000000000000000000000000000000000dEaD".toLowerCase() && value === BigInt(0)) {
+          else if (toAddr.toLowerCase() === fromAddr.toLowerCase() && value === BigInt(0)) {
             const lastChar = hash.slice(-1).toLowerCase();
             const lastVal = parseInt(lastChar, 16);
             
-            let gamePlayed = "Dice Roll";
+            let gamePlayed = "Coin Flip";
             let xpEarned = 15;
-            let detailSuffix = "rolled Dice Roll and earned 15 XP (Base)";
+            let detailSuffix = "played Coin Flip and earned 15 XP (Base)";
 
-            if (lastVal % 3 === 0) {
-              gamePlayed = "Crypto Slots";
-              if (lastVal % 6 === 0) {
-                xpEarned = 100;
-                detailSuffix = "spun the Slots and hit the COMBO! (+100 XP)";
-              } else {
-                xpEarned = 45;
-                detailSuffix = "spun the Slots and earned +45 XP";
-              }
-            } else if (lastVal % 3 === 1) {
-              gamePlayed = "Lucky Number";
-              if (lastVal > 10) {
-                xpEarned = 120;
-                detailSuffix = "guessed the Lucky Number and won +120 XP";
+            // Distribute across all 4 games
+            if (lastVal % 4 === 0) {
+              gamePlayed = "Coin Flip";
+              if (lastVal > 8) {
+                xpEarned = 90;
+                detailSuffix = "played Coin Flip and won +75 XP";
               } else {
                 xpEarned = 15;
-                detailSuffix = "guessed the Lucky Number and earned 15 XP (Base)";
+                detailSuffix = "played Coin Flip and earned 15 XP (Base)";
               }
-            } else {
+            } else if (lastVal % 4 === 1) {
               gamePlayed = "Dice Roll";
-              if (lastVal > 8) {
+              if (lastVal > 11) {
                 xpEarned = 150;
-                detailSuffix = "rolled double on Dice Roll and won +150 XP";
+                detailSuffix = "rolled double on Dice Roll and won +135 XP";
               } else {
                 xpEarned = 15;
                 detailSuffix = "rolled Dice Roll and earned 15 XP (Base)";
+              }
+            } else if (lastVal % 4 === 2) {
+              gamePlayed = "Crypto Slots";
+              if (lastVal === 14) {
+                xpEarned = 200;
+                detailSuffix = "spun the Slots and hit the QUADRUPLE Combo! (+185 XP)";
+              } else if (lastVal > 10) {
+                xpEarned = 100;
+                detailSuffix = "spun the Slots and hit a Triple Match! (+85 XP)";
+              } else if (lastVal > 5) {
+                xpEarned = 45;
+                detailSuffix = "spun the Slots and hit a Double Match! (+30 XP)";
+              } else {
+                xpEarned = 15;
+                detailSuffix = "spun the Slots and earned 15 XP (Base)";
+              }
+            } else {
+              gamePlayed = "Lucky Number";
+              if (lastVal > 10) {
+                xpEarned = 120;
+                detailSuffix = "guessed the Lucky Number and won +105 XP";
+              } else {
+                xpEarned = 15;
+                detailSuffix = "guessed the Lucky Number and earned 15 XP (Base)";
               }
             }
 
@@ -1511,8 +1527,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                      actionName.toLowerCase().includes("lucky") ||
                      actionName.toLowerCase().includes("greeting");
 
-    // To prevent self-transactions in MetaMask, always direct gas fee actions (greetings & games) to the Dead address
-    const toAddress = "0x000000000000000000000000000000000000dEaD";
+    // Bring back self-transaction for arcade games and greetings
+    const toAddress = isEvmWallet(walletType) ? (evmAddress || "0x0000000000000000000000000000000000000000") : "0x0000000000000000000000000000000000000000";
     const valueEth = "0";
 
     const providerObj = getEvmProviderObject(walletType);

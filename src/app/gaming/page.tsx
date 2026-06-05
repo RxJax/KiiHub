@@ -840,10 +840,10 @@ export default function GamingArcade() {
 
                 <div className="flex flex-wrap gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-800/60 mt-6 font-mono text-[9px] font-bold">
                   <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                    5 XP
+                    15 XP
                   </span>
                   <span className="text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
-                    +15 XP (Win)
+                    +75 XP (Win)
                   </span>
                 </div>
               </div>
@@ -866,10 +866,10 @@ export default function GamingArcade() {
 
                 <div className="flex flex-wrap gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-800/60 mt-6 font-mono text-[9px] font-bold">
                   <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                    5 XP
+                    15 XP
                   </span>
                   <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                    +45 XP (Win)
+                    +135 XP (Win)
                   </span>
                 </div>
               </div>
@@ -892,10 +892,10 @@ export default function GamingArcade() {
 
                 <div className="flex flex-wrap gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-800/60 mt-6 font-mono text-[9px] font-bold">
                   <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                    5 XP
+                    15 XP
                   </span>
                   <span className="text-orange-600 dark:text-orange-400 bg-orange-500/10 dark:bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded">
-                    +60 XP (Combo)
+                    +185 XP (Combo)
                   </span>
                 </div>
               </div>
@@ -918,10 +918,10 @@ export default function GamingArcade() {
 
                 <div className="flex flex-wrap gap-2 pt-4 border-t border-zinc-200 dark:border-zinc-800/60 mt-6 font-mono text-[9px] font-bold">
                   <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                    5 XP
+                    15 XP
                   </span>
                   <span className="text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">
-                    +30 XP (Win)
+                    +105 XP (Win)
                   </span>
                 </div>
               </div>
@@ -953,8 +953,8 @@ export default function GamingArcade() {
 
                 {/* Sub Stats */}
                 <div className="flex gap-4 text-xs font-bold text-zinc-400">
-                  <span className="flex items-center gap-1">⭐ 5 XP</span>
-                  <span className="text-amber-500 flex items-center gap-1">↗️ +15 Win</span>
+                  <span className="flex items-center gap-1">⭐ 15 XP</span>
+                  <span className="text-amber-500 flex items-center gap-1">↗️ +75 Win</span>
                 </div>
 
                 {/* Main Selection Area */}
@@ -1036,7 +1036,7 @@ export default function GamingArcade() {
 
                 {/* Share Button */}
                 <button
-                  onClick={() => handleShareOnX("Coin Flip", gameOutcome.status === "win" ? "won +15 XP" : "earned 5 XP")}
+                  onClick={() => handleShareOnX("Coin Flip", gameOutcome.status === "win" ? "won +75 XP" : "earned 15 XP")}
                   className="w-full py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs tracking-wider transition-all flex items-center justify-center gap-2"
                 >
                   <Share2 className="w-4 h-4" />
@@ -1078,8 +1078,8 @@ export default function GamingArcade() {
 
                 {/* Sub Stats */}
                 <div className="flex gap-4 text-xs font-bold text-zinc-400">
-                  <span className="flex items-center gap-1">⭐ 5 XP</span>
-                  <span className="text-kii-emerald flex items-center gap-1">↗️ +45 Win</span>
+                  <span className="flex items-center gap-1">⭐ 15 XP</span>
+                  <span className="text-kii-emerald flex items-center gap-1">↗️ +135 Win</span>
                 </div>
 
                 {/* Selection Heading */}
@@ -1149,7 +1149,7 @@ export default function GamingArcade() {
 
                 {/* Share Button */}
                 <button
-                  onClick={() => handleShareOnX("Dice Roll", gameOutcome.status === "win" ? `rolled double ${dicePrediction} and won +45 XP` : "earned 5 XP")}
+                  onClick={() => handleShareOnX("Dice Roll", gameOutcome.status === "win" ? `rolled double ${dicePrediction} and won +135 XP` : "earned 15 XP")}
                   className="w-full py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs tracking-wider transition-all flex items-center justify-center gap-2"
                 >
                   <Share2 className="w-4 h-4" />
@@ -1167,10 +1167,10 @@ export default function GamingArcade() {
                       <span>🎯</span> 1/36 chance
                     </div>
                     <div className="p-2.5 rounded bg-zinc-900/50 border border-brand-border flex items-center gap-2">
-                      <span>⚡</span> 5 XP base
+                      <span>⚡</span> 15 XP base
                     </div>
                     <div className="p-2.5 rounded bg-zinc-900/50 border border-brand-border flex items-center gap-2">
-                      <span>🏆</span> +45 XP win
+                      <span>🏆</span> +135 XP win
                     </div>
                   </div>
                 </div>
@@ -1274,10 +1274,10 @@ export default function GamingArcade() {
                       <span className="text-kii-emerald font-bold">📈</span> 2+ matching symbols = bonus XP
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-kii-purple-light font-bold">⚡</span> 4 same = COMBO! +60 XP
+                      <span className="text-kii-purple-light font-bold">⚡</span> 4 same = COMBO! +185 XP
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-zinc-500 font-bold">✓</span> 5 XP base per spin
+                      <span className="text-zinc-500 font-bold">✓</span> 15 XP base per spin
                     </div>
                   </div>
                 </div>
@@ -1298,8 +1298,8 @@ export default function GamingArcade() {
 
                 {/* Sub Stats */}
                 <div className="flex gap-4 text-xs font-bold text-zinc-400">
-                  <span className="flex items-center gap-1">⭐ 5 XP</span>
-                  <span className="text-kii-purple-light flex items-center gap-1">↗️ +30 Win</span>
+                  <span className="flex items-center gap-1">⭐ 15 XP</span>
+                  <span className="text-kii-purple-light flex items-center gap-1">↗️ +105 Win</span>
                 </div>
 
                 {/* Selection Heading */}
@@ -1368,7 +1368,7 @@ export default function GamingArcade() {
 
                 {/* Share Button */}
                 <button
-                  onClick={() => handleShareOnX("Lucky Number", gameOutcome.status === "win" ? `guessed the wheel number ${luckyPrediction} and won +30 XP` : "earned 5 XP")}
+                  onClick={() => handleShareOnX("Lucky Number", gameOutcome.status === "win" ? `guessed the wheel number ${luckyPrediction} and won +105 XP` : "earned 15 XP")}
                   className="w-full py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs tracking-wider transition-all flex items-center justify-center gap-2"
                 >
                   <Share2 className="w-4 h-4" />
@@ -1386,10 +1386,10 @@ export default function GamingArcade() {
                       <span>🎯</span> 10% chance
                     </div>
                     <div className="p-2.5 rounded bg-zinc-900/50 border border-brand-border flex items-center gap-2">
-                      <span>⚡</span> 5 XP base
+                      <span>⚡</span> 15 XP base
                     </div>
                     <div className="p-2.5 rounded bg-zinc-900/50 border border-brand-border flex items-center gap-2">
-                      <span>🏆</span> +30 XP win
+                      <span>🏆</span> +105 XP win
                     </div>
                   </div>
                 </div>
