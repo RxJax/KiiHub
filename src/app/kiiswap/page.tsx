@@ -1100,7 +1100,7 @@ export default function KiiSwapDEX() {
     <div className="space-y-8 select-none">
       
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-border/40 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-border/40 pb-4 lg:pr-[380px]">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-kii-blue/20 flex items-center justify-center border border-kii-blue/30">
