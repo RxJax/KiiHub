@@ -845,9 +845,6 @@ export default function GamingArcade() {
                   <span className="text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
                     +15 XP (Win)
                   </span>
-                  <span className="text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                    Gas Fee
-                  </span>
                 </div>
               </div>
 
@@ -873,9 +870,6 @@ export default function GamingArcade() {
                   </span>
                   <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
                     +45 XP (Win)
-                  </span>
-                  <span className="text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                    Gas Fee
                   </span>
                 </div>
               </div>
@@ -903,9 +897,6 @@ export default function GamingArcade() {
                   <span className="text-orange-600 dark:text-orange-400 bg-orange-500/10 dark:bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded">
                     +60 XP (Combo)
                   </span>
-                  <span className="text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                    Gas Fee
-                  </span>
                 </div>
               </div>
 
@@ -931,9 +922,6 @@ export default function GamingArcade() {
                   </span>
                   <span className="text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 dark:bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">
                     +30 XP (Win)
-                  </span>
-                  <span className="text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                    Gas Fee
                   </span>
                 </div>
               </div>
@@ -1013,7 +1001,7 @@ export default function GamingArcade() {
                   {txPending ? (
                     <div className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl bg-zinc-950 border border-brand-border text-white text-xs font-bold">
                       <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
-                      Authorizing Gas Fee...
+                      Confirming Play...
                     </div>
                   ) : gamePlaying ? (
                     <div className="w-full flex flex-col items-center justify-center gap-3 py-6 px-6 rounded-xl bg-zinc-950 border border-amber-500/20 text-white text-xs font-bold relative">
@@ -1124,7 +1112,7 @@ export default function GamingArcade() {
                   {txPending ? (
                     <div className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl bg-zinc-950 border border-brand-border text-white text-xs font-bold">
                       <Loader2 className="w-4 h-4 animate-spin text-kii-emerald" />
-                      Authorizing Gas Fee...
+                      Confirming Play...
                     </div>
                   ) : gamePlaying ? (
                     <div className="w-full flex items-center justify-center gap-6 py-4 px-6 rounded-xl bg-zinc-950 border border-kii-emerald/20 text-white text-xs font-bold relative">
@@ -1208,7 +1196,7 @@ export default function GamingArcade() {
 
                   <div className="px-3.5 py-1.5 rounded-lg bg-zinc-950 border border-brand-border text-xs font-bold text-kii-blue flex items-center gap-1.5 font-mono">
                     <span>⚡</span>
-                    <span>Gas fee only</span>
+                    <span>Instant Play</span>
                   </div>
                 </div>
 
@@ -1280,10 +1268,7 @@ export default function GamingArcade() {
                   <span className="text-[10px] text-zinc-500 font-extrabold uppercase tracking-widest block border-b border-brand-border pb-1">How to play</span>
                   <div className="text-[11px] font-sans text-zinc-400 space-y-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-amber-500 font-bold">⭐</span> Spin costs gas fee only
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-kii-blue font-bold">▶️</span> Charged as gas-only transaction
+                      <span className="text-kii-emerald font-bold">📈</span> 2+ matching symbols = bonus XP
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-kii-emerald font-bold">📈</span> 2+ matching symbols = bonus XP
@@ -1348,7 +1333,7 @@ export default function GamingArcade() {
                   {txPending ? (
                     <div className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl bg-zinc-950 border border-brand-border text-white text-xs font-bold">
                       <Loader2 className="w-4 h-4 animate-spin text-kii-purple" />
-                      Authorizing Gas Fee...
+                      Confirming Play...
                     </div>
                   ) : gamePlaying ? (
                     <div className="w-full flex flex-col items-center justify-center gap-2 py-6 px-6 rounded-xl bg-zinc-950 border border-kii-purple/20 text-white text-xs font-bold">

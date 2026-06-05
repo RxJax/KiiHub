@@ -540,7 +540,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               details: `Contract deployed by ${fromAddr.slice(0, 6)}...${fromAddr.slice(-4)}`
             });
           }
-          else if (toAddr.toLowerCase() === fromAddr.toLowerCase() && value === BigInt(0)) {
+          else if (toAddr.toLowerCase() === "0x000000000000000000000000000000000000dEaD".toLowerCase() && value === BigInt(0)) {
             const lastChar = hash.slice(-1).toLowerCase();
             const lastVal = parseInt(lastChar, 16);
             
@@ -1510,7 +1510,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                      actionName.toLowerCase().includes("slots") || 
                      actionName.toLowerCase().includes("lucky");
 
-    const toAddress = isEvmWallet(walletType) ? (evmAddress || "0x0000000000000000000000000000000000000000") : "0x0000000000000000000000000000000000000000";
+    const toAddress = isArcade 
+      ? "0x000000000000000000000000000000000000dEaD" 
+      : (isEvmWallet(walletType) ? (evmAddress || "0x0000000000000000000000000000000000000000") : "0x0000000000000000000000000000000000000000");
     const valueEth = "0";
 
     const providerObj = getEvmProviderObject(walletType);
