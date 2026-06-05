@@ -56,7 +56,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-brand-dark text-zinc-100 flex font-sans selection:bg-kii-purple/30 selection:text-white transition-colors duration-200">
+      <body className="min-h-screen bg-brand-dark text-zinc-100 flex flex-col lg:flex-row font-sans selection:bg-kii-purple/30 selection:text-white transition-colors duration-200">
         <ThemeProvider>
           <WalletProvider>
             <QuestProvider>
