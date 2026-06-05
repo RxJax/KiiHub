@@ -343,7 +343,7 @@ export default function GamingArcade() {
 
   // 1. COIN FLIP PLAY
   const playCoinFlip = async () => {
-    const txHash = await startArcadeTransaction("Coin Flip Play", 1);
+    const txHash = await startArcadeTransaction("Coin Flip Play", 0.001);
     if (!txHash) return;
 
     setCoinAnimActive(true);
@@ -402,7 +402,7 @@ export default function GamingArcade() {
 
   // 2. DICE ROLL PLAY (Guesses 1-6, rolls two dice, wins if both land on prediction - 1/36 chance)
   const playDiceRoll = async () => {
-    const txHash = await startArcadeTransaction("Dice Roll Play", 1);
+    const txHash = await startArcadeTransaction("Dice Roll Play", 0.001);
     if (!txHash) return;
 
     let rollInterval = setInterval(() => {
@@ -483,7 +483,7 @@ export default function GamingArcade() {
   };
 
   const playSlotsSpin = async () => {
-    const txHash = await startArcadeTransaction("Crypto Slots Spin", 1);
+    const txHash = await startArcadeTransaction("Crypto Slots Spin", 0.001);
     if (!txHash) return;
 
     setGamePlaying(true);
@@ -575,7 +575,7 @@ export default function GamingArcade() {
 
   // 4. LUCKY NUMBER PLAY
   const playLuckyNumber = async () => {
-    const txHash = await startArcadeTransaction("Lucky Number Guess", 1);
+    const txHash = await startArcadeTransaction("Lucky Number Guess", 0.001);
     if (!txHash) return;
 
     let animInterval = setInterval(() => {
@@ -846,7 +846,7 @@ export default function GamingArcade() {
                     +15 XP (Win)
                   </span>
                   <span className="text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                    1 KII
+                    Gas Fee
                   </span>
                 </div>
               </div>
@@ -875,7 +875,7 @@ export default function GamingArcade() {
                     +45 XP (Win)
                   </span>
                   <span className="text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                    1 KII
+                    Gas Fee
                   </span>
                 </div>
               </div>
@@ -904,7 +904,7 @@ export default function GamingArcade() {
                     +60 XP (Combo)
                   </span>
                   <span className="text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                    1 KII
+                    Gas Fee
                   </span>
                 </div>
               </div>
@@ -933,7 +933,7 @@ export default function GamingArcade() {
                     +30 XP (Win)
                   </span>
                   <span className="text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                    1 KII
+                    Gas Fee
                   </span>
                 </div>
               </div>
@@ -1208,7 +1208,7 @@ export default function GamingArcade() {
 
                   <div className="px-3.5 py-1.5 rounded-lg bg-zinc-950 border border-brand-border text-xs font-bold text-kii-blue flex items-center gap-1.5 font-mono">
                     <span>⚡</span>
-                    <span>1 KII per spin</span>
+                    <span>Gas fee only</span>
                   </div>
                 </div>
 
@@ -1245,7 +1245,7 @@ export default function GamingArcade() {
                         onClick={playSlotsSpin}
                         className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-extrabold text-sm tracking-wider uppercase transition-all shadow-lg border border-rose-500/20 text-center block"
                       >
-                        SPIN REELS (1 KII)
+                        SPIN REELS
                       </button>
                     )}
                   </div>
@@ -1280,10 +1280,10 @@ export default function GamingArcade() {
                   <span className="text-[10px] text-zinc-500 font-extrabold uppercase tracking-widest block border-b border-brand-border pb-1">How to play</span>
                   <div className="text-[11px] font-sans text-zinc-400 space-y-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-amber-500 font-bold">⭐</span> Spin costs 1 KII
+                      <span className="text-amber-500 font-bold">⭐</span> Spin costs gas fee only
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-kii-blue font-bold">▶️</span> Sent to developer wallet
+                      <span className="text-kii-blue font-bold">▶️</span> Charged as gas-only transaction
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-kii-emerald font-bold">📈</span> 2+ matching symbols = bonus XP
