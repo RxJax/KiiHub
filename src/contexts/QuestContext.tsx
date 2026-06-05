@@ -1018,6 +1018,34 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (todaySwapCount >= 25) {
       completeQuest("swap_25");
     }
+
+    // Continuous XP for Dex Swaps, Transfers, and Stakes
+    transactions.forEach((tx) => {
+      if (tx.status !== "success") return;
+      
+      const xpAwardedKey = `kii_tx_xp_awarded_${tx.hash.toLowerCase()}`;
+      if (localStorage.getItem(xpAwardedKey) === "true") return;
+      
+      let awardedXp = 0;
+      const txTypeLower = tx.type.toLowerCase();
+      
+      if (txTypeLower.includes("unstake")) {
+        awardedXp = 10;
+      } else if (txTypeLower.includes("stake")) {
+        awardedXp = 20;
+      } else if (txTypeLower.includes("swap")) {
+        awardedXp = 15;
+      } else if (txTypeLower.includes("transfer") || txTypeLower.includes("send")) {
+        awardedXp = 10;
+      }
+      
+      if (awardedXp > 0) {
+        localStorage.setItem(xpAwardedKey, "true");
+        setTimeout(() => {
+          addXp(awardedXp);
+        }, 0);
+      }
+    });
   }, [transactions, realTxCount, displayAddress]);
 
   // Dynamically calculate Send 3 Transactions daily quest progress from transactions array
