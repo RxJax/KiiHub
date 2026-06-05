@@ -1021,7 +1021,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (Number(network.chainId) === 1336) {
           const balWei = await provider.getBalance(checksumAddress);
           const balEth = ethers.formatEther(balWei);
-          setBalance(Number(balEth).toFixed(4));
+          const formattedBal = Number(balEth).toFixed(4);
+          setBalance(formattedBal);
+
+          const key = `kii_balance_${address.toLowerCase()}`;
+          localStorage.setItem(key, formattedBal);
  
           // Fetch token balances for each asset in the POOL_REGISTRY directly
           let updatedBalances: Record<string, string> = {};
@@ -1050,17 +1054,58 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             return updated;
           });
         } else {
-          const key = `kii_balance_${address.toLowerCase()}`;
-          setBalance(localStorage.getItem(key) || "10.00");
+          // If connected to another chain, fetch real balance on KiiChain via fallback RPC
+          try {
+            const sentryProvider = globalSentryProvider || new ethers.JsonRpcProvider(SENTRY_RPC_URL);
+            const balWei = await sentryProvider.getBalance(checksumAddress);
+            const balEth = ethers.formatEther(balWei);
+            const formattedBal = Number(balEth).toFixed(4);
+            setBalance(formattedBal);
+
+            const key = `kii_balance_${address.toLowerCase()}`;
+            localStorage.setItem(key, formattedBal);
+
+            // Fetch token balances on KiiChain via fallback RPC
+            let updatedBalances: Record<string, string> = {};
+            for (const tokenSymbol of Object.keys(POOL_REGISTRY)) {
+              const registry = POOL_REGISTRY[tokenSymbol];
+              if (registry.tokenAddress && ethers.isAddress(registry.tokenAddress)) {
+                try {
+                  const tokenContract = new ethers.Contract(registry.tokenAddress, testTokenAbi, sentryProvider);
+                  const decimals = await tokenContract.decimals().catch(() => 18);
+                  const tokenBal = await tokenContract.balanceOf(checksumAddress).catch(() => BigInt(0));
+                  const formatted = Number(ethers.formatUnits(tokenBal, decimals)).toFixed(tokenSymbol === "wBTC" ? 8 : 4);
+                  updatedBalances[tokenSymbol] = formatted;
+                } catch (tokenErr) {
+                  console.warn(`Failed to fetch ${tokenSymbol} balance via fallback RPC:`, tokenErr);
+                }
+              }
+            }
+
+            setStablecoinBalances((prev) => {
+              const updated = {
+                ...prev,
+                ...updatedBalances
+              };
+              const currentAddress = sanitizeAddress(address);
+              localStorage.setItem(`kii_stable_balances_${currentAddress}`, JSON.stringify(updated));
+              return updated;
+            });
+          } catch (rpcErr) {
+            console.warn(`Failed to fetch KiiChain balance from fallback RPC:`, rpcErr);
+            // Fallback to localStorage / defaults
+            const key = `kii_balance_${address.toLowerCase()}`;
+            setBalance(localStorage.getItem(key) || "10.00");
  
-          // Sync stablecoin balances from localStorage
-          const stableKey = `kii_stable_balances_${address.toLowerCase()}`;
-          const cached = localStorage.getItem(stableKey);
-          if (cached) {
-            try {
-              setStablecoinBalances(JSON.parse(cached));
-            } catch (e) {
-              console.error(e);
+            // Sync stablecoin balances from localStorage
+            const stableKey = `kii_stable_balances_${address.toLowerCase()}`;
+            const cached = localStorage.getItem(stableKey);
+            if (cached) {
+              try {
+                setStablecoinBalances(JSON.parse(cached));
+              } catch (e) {
+                console.error(e);
+              }
             }
           }
         }
@@ -1076,8 +1121,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const data = await res.json();
           const kiiBalance = data.balances?.find((b: any) => b.denom === "ukii");
           if (kiiBalance) {
-            setBalance((Number(kiiBalance.amount) / 1000000).toFixed(4));
-
+            const formattedBal = (Number(kiiBalance.amount) / 1000000).toFixed(4);
+            setBalance(formattedBal);
+            const key = `kii_balance_${address.toLowerCase()}`;
+            localStorage.setItem(key, formattedBal);
+ 
             // Sync stablecoin balances
             const stableKey = `kii_stable_balances_${address.toLowerCase()}`;
             const cached = localStorage.getItem(stableKey);
@@ -1096,7 +1144,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       const key = `kii_balance_${address.toLowerCase()}`;
       setBalance(localStorage.getItem(key) || "10.00");
-
+ 
       // Sync stablecoin balances for mock path
       const stableKey = `kii_stable_balances_${address.toLowerCase()}`;
       const cached = localStorage.getItem(stableKey);
@@ -1109,6 +1157,24 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
   };
+
+  // Fetch balance automatically on address, chain, or wallet type changes
+  useEffect(() => {
+    if (displayAddress && walletType) {
+      fetchBalance(displayAddress, walletType).catch(console.error);
+    }
+  }, [displayAddress, chainId, walletType]);
+
+  // Poll balance periodically when wallet is connected
+  useEffect(() => {
+    if (!displayAddress || !walletType) return;
+
+    const interval = setInterval(() => {
+      fetchBalance(displayAddress, walletType).catch(console.error);
+    }, 15000); // Poll every 15 seconds
+
+    return () => clearInterval(interval);
+  }, [displayAddress, walletType]);
 
   // Listen to accounts change in EVM Wallets
   useEffect(() => {
