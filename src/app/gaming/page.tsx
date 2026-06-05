@@ -669,7 +669,7 @@ export default function GamingArcade() {
             <div>
               <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">KiiChain Game Arcade</h1>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">
-                Complete daily interactions, say greetings, and play developer arcade games. All actions execute Kii gas transactions.
+                Complete daily interactions, say greetings, and play developer arcade games. All actions execute Kii transactions.
               </p>
             </div>
           </div>

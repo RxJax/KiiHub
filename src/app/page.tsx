@@ -994,7 +994,7 @@ export default function Dashboard() {
                 </div>
                 
                 <p className="text-[11px] text-zinc-400 leading-relaxed max-w-xs mt-1">
-                  Swap KII, USDC, and USDT stablecoins instantly with low gas fee settlement routes backing cross-border assets.
+                  Swap KII, USDC, and USDT stablecoins instantly with low cost settlement routes backing cross-border assets.
                 </p>
               </div>
 

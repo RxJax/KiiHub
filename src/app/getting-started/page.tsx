@@ -50,9 +50,9 @@ export default function GettingStarted() {
     {
       id: "faucet",
       title: "Fund Wallet via Faucet",
-      description: "Request testnet KII to pay for smart contract deployment gas fees.",
+      description: "Request testnet KII to fund smart contract deployments and transactions.",
       isDone: isFaucetClaimed,
-      buttonText: isFaucetClaimed ? "Gas Funded" : "Go to Faucet",
+      buttonText: isFaucetClaimed ? "Tokens Claimed" : "Go to Faucet",
       link: null,
       icon: Droplet,
       action: () => {

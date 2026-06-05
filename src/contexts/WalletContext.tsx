@@ -638,14 +638,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         try { cachedActsList = JSON.parse(cacheA); } catch (e) {}
       }
 
-      // Merge & unique mapping
+      // Merge & unique mapping (preserve precise cached types/details by applying them after parsed logs)
       const swapsMap = new Map<string, SwapTx>();
-      cachedSwapsList.forEach(s => swapsMap.set(s.hash.toLowerCase(), s));
       newParsedSwaps.forEach(s => swapsMap.set(s.hash.toLowerCase(), s));
-
+      cachedSwapsList.forEach(s => swapsMap.set(s.hash.toLowerCase(), s));
+ 
       const actsMap = new Map<string, GlobalActivity>();
-      cachedActsList.forEach(a => actsMap.set(a.hash.toLowerCase(), a));
       newParsedActivities.forEach(a => actsMap.set(a.hash.toLowerCase(), a));
+      cachedActsList.forEach(a => actsMap.set(a.hash.toLowerCase(), a));
 
       const mergedSwaps = Array.from(swapsMap.values())
         .sort((a, b) => b.blockNumber - a.blockNumber)
@@ -1508,11 +1508,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                      actionName.toLowerCase().includes("roll") || 
                      actionName.toLowerCase().includes("flip") || 
                      actionName.toLowerCase().includes("slots") || 
-                     actionName.toLowerCase().includes("lucky");
+                     actionName.toLowerCase().includes("lucky") ||
+                     actionName.toLowerCase().includes("greeting");
 
-    const toAddress = isArcade 
-      ? "0x000000000000000000000000000000000000dEaD" 
-      : (isEvmWallet(walletType) ? (evmAddress || "0x0000000000000000000000000000000000000000") : "0x0000000000000000000000000000000000000000");
+    // To prevent self-transactions in MetaMask, always direct gas fee actions (greetings & games) to the Dead address
+    const toAddress = "0x000000000000000000000000000000000000dEaD";
     const valueEth = "0";
 
     const providerObj = getEvmProviderObject(walletType);
@@ -1536,9 +1536,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           status: "success",
           gasUsed,
           blockNumber,
-          details: isArcade 
-            ? `${actionName} transaction executed: paid gas fee` 
-            : `${actionName} transaction executed on-chain via EVM Wallet`
+          details: `${actionName} transaction executed successfully`
         });
         
         await fetchBalance(evmAddress, walletType);
@@ -1571,9 +1569,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         status: "success",
         gasUsed: "21000",
         blockNumber: latestBlock + 1,
-        details: isArcade 
-          ? `${actionName}: paid gas fee (Simulated)` 
-          : `${actionName} simulated transaction completed`
+        details: `${actionName} transaction completed (Simulated)`
       });
       
       return {

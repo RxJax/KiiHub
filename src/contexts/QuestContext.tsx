@@ -379,10 +379,10 @@ const DAILY_QUESTS_POOL: Omit<DailyChallenge, "completed" | "progress">[] = [
   { id: "daily_tx_3", title: "Send 3 Transactions", description: "Perform 3 transactions on KiiChain.", xp: 10, target: 3 },
   { id: "daily_interact_2", title: "Interact with Contracts", description: "Perform 2 smart contract interactions.", xp: 15, target: 2 },
   { id: "daily_explorer", title: "Visit Explorer", description: "Open and load the block explorer page.", xp: 5, target: 1 },
-  { id: "daily_claim_faucet", title: "Claim Faucet", description: "Request gas tokens from the portal faucet.", xp: 5, target: 1 },
+  { id: "daily_claim_faucet", title: "Claim Faucet", description: "Request tokens from the portal faucet.", xp: 5, target: 1 },
   { id: "daily_complete_5", title: "Complete 5 Actions", description: "Execute any 5 wallet actions or claims.", xp: 25, target: 5 },
-  { id: "daily_gm_gn", title: "Say GM/GN", description: "Send a daily greeting using Kii gas.", xp: 10, target: 1 },
-  { id: "daily_play_game", title: "Play 2 Arcade Games", description: "Play 2 arcade games using Kii gas.", xp: 15, target: 2 },
+  { id: "daily_gm_gn", title: "Say GM/GN", description: "Send a daily greeting on KiiChain.", xp: 10, target: 1 },
+  { id: "daily_play_game", title: "Play 2 Arcade Games", description: "Play 2 arcade games on KiiChain.", xp: 15, target: 2 },
 ];
 
 const INITIAL_WEEKLY_MISSIONS: WeeklyMission[] = [

@@ -1590,7 +1590,7 @@ export default function KiiSwapDEX() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-zinc-500 font-semibold">Network Gas Fee</span>
+                    <span className="text-zinc-500 font-semibold">Network Fee</span>
                     <span className="text-kii-teal font-bold">$0.01 (~0.002 KII)</span>
                   </div>
                   <div className="flex justify-between">
