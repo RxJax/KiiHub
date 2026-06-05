@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useWallet } from "@/contexts/WalletContext";
 import { useQuests } from "@/contexts/QuestContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import { 
   MessageSquare, 
   Gamepad2, 
@@ -18,10 +17,7 @@ import {
   RotateCw,
   Gift,
   Clover,
-  Clock,
-  Sun,
-  Moon,
-  Database
+  Clock
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -154,7 +150,6 @@ const TailsIcon = () => (
 export default function GamingArcade() {
   const { isConnected, displayAddress, balance, sendGasFeeTransaction, latestBlock, addTransaction } = useWallet();
   const { addXp, completeQuest, incrementDailyChallenge, triggerXpConfetti, unlockAchievement } = useQuests();
-  const { theme, toggleTheme } = useTheme();
 
   // Greeting States
   const [greetedGM, setGreetedGM] = useState(false);
@@ -676,34 +671,6 @@ export default function GamingArcade() {
               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">
                 Complete daily interactions, say greetings, and play developer arcade games. All actions execute Kii gas transactions.
               </p>
-            </div>
-          </div>
-
-          {/* Nav Actions */}
-          <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] self-start sm:self-center">
-            {/* Theme Toggle */}
-            <button
-              onClick={() => { playSound("click"); toggleTheme(); }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all font-sans font-bold"
-            >
-              {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-amber-500" /> : <Moon className="w-3.5 h-3.5 text-indigo-500" />}
-              <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-            </button>
-
-            {/* Testnet EVM Badge */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>Testnet EVM</span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold uppercase bg-emerald-500/10 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded ml-1">ONLINE</span>
-            </div>
-
-            {/* Live Block Chip */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold">
-              <Database className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Block #{latestBlock ? latestBlock.toLocaleString() : "31,990,509"}</span>
             </div>
           </div>
         </div>
