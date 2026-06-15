@@ -691,6 +691,47 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [displayAddress, totalXp, transactions, profileUsername]);
 
+  // Bulk sync previous leaderboard profiles from localStorage to global database
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const registryStr = localStorage.getItem("kii_leaderboard_profiles_v2");
+    const isSynced = localStorage.getItem("kii_leaderboard_synced_v3");
+    
+    if (registryStr && !isSynced) {
+      try {
+        const registry = JSON.parse(registryStr);
+        const profilesArray = Object.values(registry)
+          .map((p: any) => ({
+            address: sanitizeAddress(p.address || p.name),
+            name: p.name || p.username || "Anonymous",
+            avatar: p.avatar || "🚀",
+            title: p.title || "Newcomer",
+            level: Number(p.level) || 1,
+            xp: Number(p.xp) || 0,
+            contracts: Number(p.contracts) || 0
+          }))
+          .filter(p => p.address && p.xp > 0);
+          
+        if (profilesArray.length > 0) {
+          fetch("/api/leaderboard", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(profilesArray)
+          })
+          .then(() => {
+            localStorage.setItem("kii_leaderboard_synced_v3", "true");
+          })
+          .catch(err => console.error("Failed to bulk sync leaderboard profiles:", err));
+        } else {
+          localStorage.setItem("kii_leaderboard_synced_v3", "true");
+        }
+      } catch (e) {
+        console.error("Failed to parse registry for bulk sync", e);
+      }
+    }
+  }, []);
+
   // Sync to localStorage
   const saveState = (key: string, data: any) => {
     const addr = sanitizeAddress(displayAddress || "0x_demo_user");
@@ -1490,15 +1531,13 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     delete registry["null"];
     delete registry["undefined"];
     
-    // Clean up all profiles from the registry that are not the currently connected user AND have no local XP record on this browser.
-    // This removes all fake/generated profiles (like Cryptoundefined, AlphaCoder, etc.) completely!
+    // Clean up invalid or corrupted profiles from the registry (e.g. name contains 'undefined' or 'null')
     Object.keys(registry).forEach(key => {
       const cleanKey = sanitizeAddress(key);
       if (displayAddress && cleanKey === sanitizeAddress(displayAddress)) return;
       
-      const localXpVal = localStorage.getItem(`kii_total_xp_v2_${cleanKey}`);
-      const localXp = localXpVal ? Number(localXpVal) : 0;
-      if (localXp === 0) {
+      const p = registry[cleanKey];
+      if (!p || !p.name || p.name.includes("undefined") || p.name.includes("null") || !p.xp || p.xp === 0) {
         delete registry[cleanKey];
       }
     });

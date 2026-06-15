@@ -32,6 +32,74 @@ export function getDb(): DatabaseSync {
         last_updated INTEGER
       );
     `);
+
+    // Seed mock profiles if the database is brand new and empty
+    try {
+      const stmtCheck = db.prepare("SELECT COUNT(*) as count FROM users");
+      const result = stmtCheck.get() as { count: number };
+      if (result.count === 0) {
+        const initialUsers = [
+          {
+            address: "0x52370a367a76d65cca9a20aa9ae4c7d092683b9a",
+            username: "RxJax",
+            avatar: "🦊",
+            title: "Grandmaster Architect",
+            level: 24,
+            total_xp: 8500,
+            contracts: 12
+          },
+          {
+            address: "0x7b58c57f2c11c35679b6433b42fecd3a29146aba",
+            username: "AlphaCoder",
+            avatar: "🚀",
+            title: "Senior Developer",
+            level: 18,
+            total_xp: 5200,
+            contracts: 8
+          },
+          {
+            address: "0x1d084a1b7692cddfb60d4db0da44ba5bf9db6886",
+            username: "KiiWhale",
+            avatar: "🌌",
+            title: "Liquidity Provider",
+            level: 15,
+            total_xp: 4100,
+            contracts: 5
+          },
+          {
+            address: "0x7249ee4ee06d93dd2ed5a8b9051ae0484273d1c9",
+            username: "CryptoMaster",
+            avatar: "⚡",
+            title: "Ecosystem Pioneer",
+            level: 12,
+            total_xp: 3100,
+            contracts: 3
+          }
+        ];
+
+        const stmtInsert = db.prepare(`
+          INSERT INTO users (address, username, avatar, title, level, total_xp, contracts, last_updated)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        
+        const now = Date.now();
+        for (const u of initialUsers) {
+          stmtInsert.run(
+            u.address.toLowerCase(),
+            u.username,
+            u.avatar,
+            u.title,
+            u.level,
+            u.total_xp,
+            u.contracts,
+            now
+          );
+        }
+        console.log("[DB Seed] Successfully seeded 4 mock builder profiles.");
+      }
+    } catch (e: any) {
+      console.warn("Failed to check or seed initial user profiles:", e.message);
+    }
   }
   return db;
 }

@@ -29,6 +29,27 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    
+    // Support bulk sync (array of users)
+    if (Array.isArray(body)) {
+      for (const item of body) {
+        const { address, name, avatar, title, level, xp, contracts } = item;
+        if (address && name) {
+          upsertUser({
+            address: address.toLowerCase(),
+            username: name,
+            avatar: avatar || "🚀",
+            title: title || "Newcomer",
+            level: Number(level) || 1,
+            total_xp: Number(xp) || 0,
+            contracts: Number(contracts) || 0
+          });
+        }
+      }
+      return NextResponse.json({ success: true, count: body.length });
+    }
+
+    // Support single user sync
     const { address, name, avatar, title, level, xp, contracts } = body;
 
     if (!address || !name) {
