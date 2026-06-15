@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useWallet } from "@/contexts/WalletContext";
+import { useWallet, isEvmWallet } from "@/contexts/WalletContext";
 import { useQuests } from "@/contexts/QuestContext";
 import { 
   CheckCircle2, 
@@ -38,14 +38,16 @@ export default function GettingStarted() {
     },
     {
       id: "network",
-      title: "Add KiiChain Testnet to MetaMask",
-      description: "Automatically add EVM Chain ID 1336 and JSON-RPC settings to your extension.",
-      isDone: isConnected && walletType === "metamask" && chainId === 1336,
+      title: isConnected && walletType && isEvmWallet(walletType) 
+        ? `Add KiiChain to ${walletType.charAt(0).toUpperCase() + walletType.slice(1)}` 
+        : "Add KiiChain to Wallet",
+      description: "Automatically add EVM Chain ID 1336 and JSON-RPC settings to your connected wallet.",
+      isDone: isConnected && isEvmWallet(walletType) && chainId === 1336,
       buttonText: chainId === 1336 ? "Network Added" : "Configure Network",
       link: null,
       icon: Cpu,
       action: addNetworkToMetaMask,
-      disabled: !isConnected || walletType !== "metamask",
+      disabled: !isConnected || !isEvmWallet(walletType),
     },
     {
       id: "faucet",

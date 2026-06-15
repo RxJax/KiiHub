@@ -26,11 +26,13 @@ export const getEvmProviderObject = (type: WalletType) => {
     const eth = windowObj.ethereum;
     if (eth) {
       if (eth.providers && Array.isArray(eth.providers)) {
-        return eth.providers.find((p: any) => p.isMetaMask && !p.isBraveWallet && !p.isRabby && !p.isTrust) || null;
+        const mm = eth.providers.find((p: any) => p.isMetaMask && !p.isBraveWallet && !p.isRabby && !p.isTrust);
+        if (mm) return mm;
+        const anyMM = eth.providers.find((p: any) => p.isMetaMask);
+        if (anyMM) return anyMM;
+        return eth.providers[0] || eth;
       }
-      if (eth.isMetaMask && !eth.isBraveWallet && !eth.isRabby && !eth.isTrust) {
-        return eth;
-      }
+      return eth;
     }
     return null;
   }
@@ -1205,8 +1207,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       };
 
-      const handleChainChanged = (chainIdHex: string) => {
-        setChainId(parseInt(chainIdHex, 16));
+      const handleChainChanged = (chainIdHex: any) => {
+        if (!chainIdHex) return;
+        if (typeof chainIdHex === "number") {
+          setChainId(chainIdHex);
+        } else if (typeof chainIdHex === "string") {
+          if (chainIdHex.startsWith("0x")) {
+            setChainId(parseInt(chainIdHex, 16));
+          } else {
+            setChainId(parseInt(chainIdHex, 10));
+          }
+        }
       };
 
       if (providerObj.on) {
@@ -1263,7 +1274,54 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       try {
-        await extension.enable(cosmosChainId);
+        try {
+          await extension.enable(cosmosChainId);
+        } catch (enableErr) {
+          console.warn("Chain not enabled in Cosmos wallet, suggesting chain configuration...", enableErr);
+          await extension.experimentalSuggestChain({
+            chainId: cosmosChainId,
+            chainName: "KiiChain Testnet Oro",
+            rpc: "https://rpc.uno.sentry.testnet.v3.kiivalidator.com",
+            rest: "https://api.uno.sentry.testnet.v3.kiivalidator.com",
+            bip44: {
+              coinType: 118,
+            },
+            bech32Config: {
+              bech32PrefixAccAddr: "kii",
+              bech32PrefixAccPub: "kiipub",
+              bech32PrefixValAddr: "kiivaloper",
+              bech32PrefixValPub: "kiivaloperpub",
+              bech32PrefixConsAddr: "kiivalcons",
+              bech32PrefixConsPub: "kiivalconspub",
+            },
+            currencies: [
+              {
+                coinDenom: "KII",
+                coinMinimalDenom: "ukii",
+                coinDecimals: 6,
+              },
+            ],
+            feeCurrencies: [
+              {
+                coinDenom: "KII",
+                coinMinimalDenom: "ukii",
+                coinDecimals: 6,
+                gasPriceStep: {
+                  low: 0.01,
+                  average: 0.025,
+                  high: 0.04,
+                },
+              },
+            ],
+            stakeCurrency: {
+              coinDenom: "KII",
+              coinMinimalDenom: "ukii",
+              coinDecimals: 6,
+            },
+          });
+          await extension.enable(cosmosChainId);
+        }
+        
         const offlineSigner = extension.getOfflineSigner(cosmosChainId);
         const accounts = await offlineSigner.getAccounts();
         
@@ -1313,25 +1371,65 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     try {
       const hexChainId = "0x" + evmChainId.toString(16);
-      await providerObj.request({
-        method: "wallet_addEthereumChain",
-        params: [
-          {
-            chainId: hexChainId,
-            chainName: "KiiChain Testnet EVM",
-            nativeCurrency: {
-              name: "Kii Token",
-              symbol: "KII",
-              decimals: 18,
+      try {
+        await providerObj.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: hexChainId }],
+        });
+        
+        // Query chainId immediately to force state sync
+        try {
+          const provider = new ethers.BrowserProvider(providerObj);
+          const network = await provider.getNetwork();
+          const newChainId = Number(network.chainId);
+          setChainId(newChainId);
+          if (evmAddress) {
+            fetchBalance(evmAddress, walletType);
+          }
+        } catch (e) {
+          console.warn("Failed to query network after switch:", e);
+        }
+        return true;
+      } catch (switchError: any) {
+        // If the user cancelled/rejected the request, do not try to add the chain.
+        if (switchError.code === 4001) {
+          throw switchError;
+        }
+        
+        // For any other error (unknown chain, internal error, custom provider error), try adding the chain.
+        await providerObj.request({
+          method: "wallet_addEthereumChain",
+          params: [
+            {
+              chainId: hexChainId,
+              chainName: "KiiChain Testnet EVM",
+              nativeCurrency: {
+                name: "Kii Token",
+                symbol: "KII",
+                decimals: 18,
+              },
+              rpcUrls: ["https://json-rpc.dos.sentry.testnet.v3.kiivalidator.com/"],
+              blockExplorerUrls: ["https://explorer.kiichain.io/"],
             },
-            rpcUrls: ["https://json-rpc.dos.sentry.testnet.v3.kiivalidator.com/"],
-            blockExplorerUrls: ["https://explorer.kiichain.io/"],
-          },
-        ],
-      });
-      return true;
+          ],
+        });
+
+        // Query chainId immediately to force state sync
+        try {
+          const provider = new ethers.BrowserProvider(providerObj);
+          const network = await provider.getNetwork();
+          const newChainId = Number(network.chainId);
+          setChainId(newChainId);
+          if (evmAddress) {
+            fetchBalance(evmAddress, walletType);
+          }
+        } catch (e) {
+          console.warn("Failed to query network after add:", e);
+        }
+        return true;
+      }
     } catch (err) {
-      console.warn("Failed to add network to wallet:", err);
+      console.warn("Failed to add or switch network in wallet:", err);
       return false;
     }
   };
@@ -1622,12 +1720,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             // Wait briefly for switch to apply
             await new Promise((resolve) => setTimeout(resolve, 1000));
           } catch (switchError: any) {
-            if (switchError.code === 4902) {
-              await addNetworkToMetaMask();
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-            } else {
+            if (switchError.code === 4001) {
               throw new Error(`Please switch your wallet network to KiiChain Testnet Oro (Chain ID: 1336) to perform swaps.`);
             }
+            await addNetworkToMetaMask();
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           }
         }
 

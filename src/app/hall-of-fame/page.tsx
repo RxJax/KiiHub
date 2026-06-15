@@ -54,152 +54,105 @@ export default function HallOfFame() {
     highestXpCount: 0,
   });
 
-  // Dynamically compile and sort the live leaderboard containing all genuine profiles
+  // Fetch global leaderboard rankings from API with real-time polling
   useEffect(() => {
-    const registryStr = localStorage.getItem("kii_leaderboard_profiles_v2");
-    let registry: Record<string, any> = {};
-    if (registryStr) {
+    const fetchLeaderboard = async () => {
       try {
-        registry = JSON.parse(registryStr);
-      } catch (e) {
-        console.error("Failed to parse registry", e);
-      }
-    }
+        const res = await fetch("/api/leaderboard");
+        if (!res.ok) throw new Error("Failed to fetch leaderboard");
+        const data = await res.json();
 
-    // Normalize keys in the existing registry to lowercase and trim to prevent duplicates
-    const cleanedRegistry: Record<string, any> = {};
-    Object.keys(registry).forEach(key => {
-      const cleanKey = sanitizeAddress(key);
-      const isValidEvm = /^0x[a-f0-9]{40}$/.test(cleanKey);
-      const isValidCosmos = /^kii1[a-z0-9]{38,45}$/.test(cleanKey);
-      if (isValidEvm || isValidCosmos) {
-        cleanedRegistry[cleanKey] = {
-          ...registry[key],
-          address: cleanKey
-        };
-      }
-    });
-    registry = cleanedRegistry;
+        // Assign ranks and isUser flag
+        let ranked = data.map((entry: any, index: number) => {
+          const entryAddr = sanitizeAddress(entry.address);
+          const userAddr = displayAddress ? sanitizeAddress(displayAddress) : "";
+          const isUser = userAddr ? entryAddr === userAddr : false;
+          
+          return {
+            ...entry,
+            name: isUser ? `${profileUsername || entry.name} (You)` : entry.name,
+            avatar: isUser ? (profileAvatar || entry.avatar) : entry.avatar,
+            title: isUser ? (profileTitle || entry.title) : entry.title,
+            level: isUser ? (level || entry.level) : entry.level,
+            xp: isUser ? (totalXp || entry.xp) : entry.xp,
+            isUser,
+            rank: index + 1
+          };
+        });
 
-    // Clean up invalid or demo keys from active display list
-    delete registry["0x_demo_user"];
-    delete registry["null"];
-    delete registry["undefined"];
-    
-    // Write back cleaned registry to localStorage to heal legacy duplicate profiles
-    localStorage.setItem("kii_leaderboard_profiles_v2", JSON.stringify(registry));
-    
-    // Convert registry map to array and filter out mock addresses
-    const profiles = Object.values(registry)
-      .filter((p: any) => {
-        const cleanAddr = sanitizeAddress(p.address);
-        return cleanAddr !== "0x_demo_user" &&
-               cleanAddr !== "null" &&
-               cleanAddr !== "undefined";
-      })
-      .map((p: any) => {
-        const pAddr = sanitizeAddress(p.address);
-        const dAddr = displayAddress ? sanitizeAddress(displayAddress) : "";
-        const isUser = dAddr ? pAddr === dAddr : false;
-        return {
-          name: isUser ? `${p.name} (You)` : p.name,
-          avatar: p.avatar,
-          title: p.title,
-          level: p.level,
-          xp: p.xp,
-          contracts: p.contracts,
-          isUser,
-          address: pAddr
-        };
-      });
+        // Optimistic update: if current active user isn't in global database yet, add manually (if connected and has XP)
+        const hasCurrentUser = ranked.some((p: any) => p.isUser);
+        if (!hasCurrentUser && displayAddress && totalXp > 0) {
+          const dAddr = sanitizeAddress(displayAddress);
+          const userVal = transactions.filter(t => t.type.includes("Deploy")).length;
+          
+          ranked.push({
+            name: `${profileUsername} (You)`,
+            avatar: profileAvatar,
+            title: profileTitle,
+            level: level,
+            xp: totalXp,
+            contracts: userVal,
+            isUser: true,
+            address: dAddr,
+            rank: ranked.length + 1
+          });
 
-    // If current active user isn't in registry yet, add them manually (only if connected and has XP)
-    const hasCurrentUser = profiles.some(p => p.isUser);
-    if (!hasCurrentUser && displayAddress && totalXp > 0) {
-      const dAddr = sanitizeAddress(displayAddress);
-      const userVal = transactions.filter(t => t.type.includes("Deploy")).length;
-      
-      profiles.push({
-        name: `${profileUsername} (You)`,
-        avatar: profileAvatar,
-        title: profileTitle,
-        level: level,
-        xp: totalXp,
-        contracts: userVal,
-        isUser: true,
-        address: dAddr
-      });
-    }
+          // Sort descending by XP, then level, then contracts
+          ranked.sort((a: any, b: any) => {
+            if (b.xp !== a.xp) return b.xp - a.xp;
+            if (b.level !== a.level) return b.level - a.level;
+            return b.contracts - a.contracts;
+          });
 
-    // Ensure unique profiles by address (only keep one per address)
-    const uniqueProfilesMap: Record<string, any> = {};
-    profiles.forEach(p => {
-      const addrKey = sanitizeAddress(p.address);
-      if (addrKey) {
-        const existing = uniqueProfilesMap[addrKey];
-        if (!existing) {
-          uniqueProfilesMap[addrKey] = p;
-        } else {
-          // Prefer active user profile over other entries
-          if (p.isUser) {
-            uniqueProfilesMap[addrKey] = p;
-          } else if (!existing.isUser && p.xp > existing.xp) {
-            uniqueProfilesMap[addrKey] = p;
+          // Re-assign ranks
+          ranked.forEach((entry: any, index: number) => {
+            entry.rank = index + 1;
+          });
+        }
+
+        setLeaderboard(ranked);
+
+        // Compute shelf stats
+        if (ranked.length > 0) {
+          let maxContractsProj = ranked[0];
+          let maxContractsVal = ranked[0].contracts;
+          
+          let maxXpProj = ranked[0];
+          let maxXpVal = ranked[0].xp;
+          
+          for (let entry of ranked) {
+            if (entry.contracts > maxContractsVal) {
+              maxContractsVal = entry.contracts;
+              maxContractsProj = entry;
+            }
+            if (entry.xp > maxXpVal) {
+              maxXpVal = entry.xp;
+              maxXpProj = entry;
+            }
           }
+          
+          const formatName = (entry: any) => {
+            return entry.isUser ? entry.name.replace(" (You)", "") : entry.name;
+          };
+
+          setShelfStats({
+            mostContractsUser: formatName(maxContractsProj),
+            mostContractsCount: maxContractsVal,
+            highestXpUser: formatName(maxXpProj),
+            highestXpCount: maxXpVal
+          });
         }
+      } catch (err) {
+        console.error("Failed to load global leaderboard data:", err);
       }
-    });
+    };
 
-    // Only keep profiles that have earned XP (XP > 0)
-    const activeProfiles = Object.values(uniqueProfilesMap).filter((p: any) => {
-      return p.xp > 0;
-    });
+    fetchLeaderboard();
 
-    // Sort descending by XP, then by level, then by contracts
-    activeProfiles.sort((a: any, b: any) => {
-      if (b.xp !== a.xp) return b.xp - a.xp;
-      if (b.level !== a.level) return b.level - a.level;
-      return b.contracts - a.contracts;
-    });
-
-    // Assign ranking indexes
-    const ranked = activeProfiles.map((entry: any, index: number) => ({
-      ...entry,
-      rank: index + 1
-    }));
-
-    setLeaderboard(ranked);
-
-    // Compute shelf stats
-    if (ranked.length > 0) {
-      let maxContractsProj = ranked[0];
-      let maxContractsVal = ranked[0].contracts;
-      
-      let maxXpProj = ranked[0];
-      let maxXpVal = ranked[0].xp;
-      
-      for (let entry of ranked) {
-        if (entry.contracts > maxContractsVal) {
-          maxContractsVal = entry.contracts;
-          maxContractsProj = entry;
-        }
-        if (entry.xp > maxXpVal) {
-          maxXpVal = entry.xp;
-          maxXpProj = entry;
-        }
-      }
-      
-      const formatName = (entry: any) => {
-        return entry.isUser ? entry.name.replace(" (You)", "") : entry.name;
-      };
-
-      setShelfStats({
-        mostContractsUser: formatName(maxContractsProj),
-        mostContractsCount: maxContractsVal,
-        highestXpUser: formatName(maxXpProj),
-        highestXpCount: maxXpVal
-      });
-    }
+    // Set up real-time polling every 5 seconds
+    const interval = setInterval(fetchLeaderboard, 5000);
+    return () => clearInterval(interval);
   }, [totalXp, level, profileUsername, profileAvatar, profileTitle, transactions, displayAddress]);
 
   // Extract Podium spots (top 3)

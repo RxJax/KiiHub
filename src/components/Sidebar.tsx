@@ -23,7 +23,7 @@ import {
   BarChart2,
   X
 } from "lucide-react";
-import { useWallet } from "../contexts/WalletContext";
+import { useWallet, isEvmWallet } from "../contexts/WalletContext";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -237,7 +237,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Wallet Status Area */}
         {isConnected && displayAddress ? (
-          walletType === "metamask" && chainId !== 1336 ? (
+          isEvmWallet(walletType) && chainId !== 1336 ? (
             <button
               onClick={addNetworkToMetaMask}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 text-xs font-semibold cursor-pointer transition-colors text-center shadow-lg"
@@ -250,10 +250,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="p-3.5 rounded-lg bg-zinc-900/60 border border-brand-border flex items-center justify-between text-left">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-kii-purple to-kii-blue flex-shrink-0 flex items-center justify-center text-xs shadow-md border border-white/10">
-                  {walletType === "metamask" ? "🦊" : "🌌"}
+                  {walletType === "metamask" ? "🦊" : walletType === "keplr" ? "🌌" : walletType === "leap" ? "🐸" : "💼"}
                 </div>
                 <div className="flex flex-col min-w-0 font-mono">
-                  <span className="text-[9.5px] text-zinc-500 leading-none">{walletType === "metamask" ? "Metamask Connected" : "Keplr Connected"}</span>
+                  <span className="text-[9.5px] text-zinc-500 leading-none">
+                    {walletType ? `${walletType.charAt(0).toUpperCase() + walletType.slice(1)} Connected` : "Wallet Connected"}
+                  </span>
                   <span className="text-[10px] font-black text-white truncate max-w-[100px] mt-0.5">
                     {truncateAddress(displayAddress)}
                   </span>

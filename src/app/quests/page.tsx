@@ -77,6 +77,7 @@ export default function QuestsHub() {
 
   const [activeTab, setActiveTab] = useState<"quests" | "dailies" | "leaderboard" | "season" | "referral" | "community">("quests");
   const [activeLeaderboardTab, setActiveLeaderboardTab] = useState<"xp" | "deploys" | "tx" | "projects" | "referrals">("xp");
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   
   // Referral input mock state
   const [refMoniker, setRefMoniker] = useState<string>("");
@@ -170,138 +171,126 @@ export default function QuestsHub() {
     }
   };
 
-  // Compile Leaderboard inserting User dynamically based on XP & current metrics
-  const getLeaderboardData = (): LeaderboardEntry[] => {
-    const registryStr = typeof window !== "undefined" ? localStorage.getItem("kii_leaderboard_profiles_v2") : null;
-    let registry: Record<string, any> = {};
-    if (registryStr) {
+  // Fetch global leaderboard rankings from API with real-time polling
+  useEffect(() => {
+    if (activeTab !== "leaderboard") return;
+
+    const fetchLeaderboard = async () => {
       try {
-        registry = JSON.parse(registryStr);
-      } catch (e) {
-        console.error("Failed to parse registry", e);
-      }
-    }
+        const res = await fetch("/api/leaderboard");
+        if (!res.ok) throw new Error("Failed to fetch leaderboard");
+        const data = await res.json();
 
-    // Normalize keys in the existing registry to prevent casing duplicates
-    const cleanedRegistry: Record<string, any> = {};
-    Object.keys(registry).forEach(key => {
-      const lowerKey = sanitizeAddress(key);
-      cleanedRegistry[lowerKey] = {
-        ...registry[key],
-        address: lowerKey
-      };
-    });
-    registry = cleanedRegistry;
-
-    // Clean up invalid or demo keys from active display list
-    delete registry["0x_demo_user"];
-    delete registry["null"];
-    delete registry["undefined"];
-    
-    // Map registry profiles and filter out mock addresses
-    const profiles = Object.values(registry)
-      .filter((p: any) => {
-        const cleanAddr = sanitizeAddress(p.address);
-        return cleanAddr !== "0x_demo_user" &&
-               cleanAddr !== "null" &&
-               cleanAddr !== "undefined";
-      })
-      .map((p: any) => {
-        const pAddr = sanitizeAddress(p.address);
-        const dAddr = displayAddress ? sanitizeAddress(displayAddress) : "";
-        const isUser = dAddr ? pAddr === dAddr : false;
-        
-        let metricValue = p.xp;
-        if (activeLeaderboardTab === "deploys") {
-          metricValue = p.contracts || 0;
-        } else if (activeLeaderboardTab === "tx") {
-          metricValue = p.transactionsCount || 0;
-        } else if (activeLeaderboardTab === "projects") {
-          metricValue = p.projectsCount || 0;
-        } else if (activeLeaderboardTab === "referrals") {
-          metricValue = p.referralsCount || 0;
+        // Read local storage registry to merge extra stats if available
+        const registryStr = typeof window !== "undefined" ? localStorage.getItem("kii_leaderboard_profiles_v2") : null;
+        let localRegistry: Record<string, any> = {};
+        if (registryStr) {
+          try {
+            localRegistry = JSON.parse(registryStr);
+          } catch (e) {}
         }
 
-        return {
-          rank: 1,
-          address: pAddr,
-          name: isUser ? `${p.name} (You)` : p.name,
-          avatar: p.avatar,
-          title: p.title,
-          level: p.level,
-          xp: p.xp,
-          metricValue,
-          isUser
-        };
-      });
+        let mappedProfiles = data.map((p: any) => {
+          const pAddr = sanitizeAddress(p.address);
+          const dAddr = displayAddress ? sanitizeAddress(displayAddress) : "";
+          const isUser = dAddr ? pAddr === dAddr : false;
 
-    // If current active user isn't in registry yet, add them manually (only if connected and has XP)
-    const hasCurrentUser = profiles.some(p => p.isUser);
-    if (!hasCurrentUser && displayAddress && totalXp > 0) {
-      const dAddr = sanitizeAddress(displayAddress);
-      let userVal = totalXp;
-      if (activeLeaderboardTab === "deploys") {
-        userVal = transactions.filter(t => t.type.includes("Deploy")).length;
-      } else if (activeLeaderboardTab === "tx") {
-        userVal = Math.max(realTxCount, transactions.length);
-      } else if (activeLeaderboardTab === "projects") {
-        userVal = projects.length;
-      } else if (activeLeaderboardTab === "referrals") {
-        userVal = referredUsers.length;
-      }
-
-      profiles.push({
-        rank: 1,
-        address: dAddr,
-        name: `${profileUsername} (You)`,
-        avatar: profileAvatar,
-        title: profileTitle,
-        level: level,
-        xp: totalXp,
-        metricValue: userVal,
-        isUser: true
-      });
-    }
-
-    // Ensure unique profiles by address (only keep one per address)
-    const uniqueProfilesMap: Record<string, any> = {};
-    profiles.forEach(p => {
-      const addrKey = sanitizeAddress(p.address);
-      if (addrKey) {
-        const existing = uniqueProfilesMap[addrKey];
-        if (!existing) {
-          uniqueProfilesMap[addrKey] = p;
-        } else {
-          // Prefer active user profile over mock profiles
-          if (p.isUser) {
-            uniqueProfilesMap[addrKey] = p;
-          } else if (!existing.isUser && p.xp > existing.xp) {
-            uniqueProfilesMap[addrKey] = p;
+          // Merge local registry data if available for private stats (transactionsCount, projectsCount, referralsCount)
+          const localProf = localRegistry[pAddr] || {};
+          
+          let metricValue = p.xp;
+          if (activeLeaderboardTab === "deploys") {
+            metricValue = p.contracts || 0;
+          } else if (activeLeaderboardTab === "tx") {
+            metricValue = isUser ? Math.max(realTxCount, transactions.length) : (localProf.transactionsCount || 0);
+          } else if (activeLeaderboardTab === "projects") {
+            metricValue = isUser ? projects.length : (localProf.projectsCount || 0);
+          } else if (activeLeaderboardTab === "referrals") {
+            metricValue = isUser ? referredUsers.length : (localProf.referralsCount || 0);
           }
+
+          return {
+            rank: 1,
+            address: pAddr,
+            name: isUser ? `${profileUsername || p.name} (You)` : p.name,
+            avatar: p.avatar,
+            title: p.title,
+            level: p.level,
+            xp: p.xp,
+            metricValue,
+            isUser
+          };
+        });
+
+        // Optimistic update: if current active user isn't in global database yet, add manually (if connected and has XP)
+        const hasCurrentUser = mappedProfiles.some((p: any) => p.isUser);
+        if (!hasCurrentUser && displayAddress && totalXp > 0) {
+          const dAddr = sanitizeAddress(displayAddress);
+          let userVal = totalXp;
+          if (activeLeaderboardTab === "deploys") {
+            userVal = transactions.filter(t => t.type.includes("Deploy")).length;
+          } else if (activeLeaderboardTab === "tx") {
+            userVal = Math.max(realTxCount, transactions.length);
+          } else if (activeLeaderboardTab === "projects") {
+            userVal = projects.length;
+          } else if (activeLeaderboardTab === "referrals") {
+            userVal = referredUsers.length;
+          }
+
+          mappedProfiles.push({
+            rank: 1,
+            address: dAddr,
+            name: `${profileUsername} (You)`,
+            avatar: profileAvatar,
+            title: profileTitle,
+            level: level,
+            xp: totalXp,
+            metricValue: userVal,
+            isUser: true
+          });
         }
+
+        // Only keep profiles that have earned XP (XP > 0)
+        mappedProfiles = mappedProfiles.filter((p: any) => p.xp > 0);
+
+        // Sort descending by metricValue, then level
+        mappedProfiles.sort((a: any, b: any) => {
+          if (b.metricValue !== a.metricValue) return b.metricValue - a.metricValue;
+          if (b.xp !== a.xp) return b.xp - a.xp;
+          return b.level - a.level;
+        });
+
+        // Assign ranks
+        const ranked = mappedProfiles.map((entry: any, idx: number) => ({
+          ...entry,
+          rank: idx + 1
+        }));
+
+        setLeaderboardData(ranked);
+      } catch (err) {
+        console.error("Failed to fetch global leaderboard in quests:", err);
       }
-    });
+    };
 
-    // Only keep profiles that have earned XP (XP > 0)
-    const activeProfiles = Object.values(uniqueProfilesMap).filter((p: any) => {
-      return p.xp > 0;
-    });
+    fetchLeaderboard();
 
-    // Sort descending by metricValue, then by level
-    activeProfiles.sort((a: any, b: any) => {
-      if (b.metricValue !== a.metricValue) return b.metricValue - a.metricValue;
-      if (b.xp !== a.xp) return b.xp - a.xp;
-      return b.level - a.level;
-    });
-
-    // Re-assign ranks
-    return activeProfiles.map((entry: any, idx: number) => ({
-      ...entry,
-      rank: idx + 1
-    }));
-  };
-
-  const leaderboardData = getLeaderboardData();
+    // Set up real-time polling every 5 seconds
+    const interval = setInterval(fetchLeaderboard, 5000);
+    return () => clearInterval(interval);
+  }, [
+    activeTab,
+    activeLeaderboardTab,
+    displayAddress,
+    totalXp,
+    transactions,
+    projects,
+    referredUsers,
+    profileUsername,
+    profileAvatar,
+    profileTitle,
+    level,
+    realTxCount
+  ]);
   
   // Extract Podium spots (top 3)
   const podiumSpots = {

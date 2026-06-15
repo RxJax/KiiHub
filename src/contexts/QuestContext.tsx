@@ -421,6 +421,36 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [dailyCountdown, setDailyCountdown] = useState<string>("23h 59m 59s");
   const [weeklyCountdown, setWeeklyCountdown] = useState<string>("6d 23h 59m 59s");
   const [seasonDaysRemaining, setSeasonDaysRemaining] = useState<number>(30);
+
+  // Sync profile details to the backend global database
+  const syncProfileToDb = (
+    addr: string, 
+    username: string, 
+    avatar: string, 
+    title: string, 
+    levelVal: number, 
+    xpVal: number, 
+    contractsVal: number
+  ) => {
+    if (!addr || addr === "0x_demo_user") return;
+    fetch("/api/leaderboard", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        address: addr,
+        name: username,
+        avatar,
+        title,
+        level: levelVal,
+        xp: xpVal,
+        contracts: contractsVal
+      })
+    }).catch((err) => {
+      console.error("Failed to sync profile globally:", err);
+    });
+  };
   
   // Hydrate states from localStorage when active address changes
   useEffect(() => {
@@ -1515,6 +1545,8 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           questsCount: quests.filter(q => q.completed).length,
           lastUpdated: Date.now()
         };
+        // Sync profile to database globally
+        syncProfileToDb(addr, profileUsername, profileAvatar, profileTitle, level, totalXp, contractDeploys);
       } else {
         // If there's no user activity yet, remove from registry to keep leaderboard clean
         delete registry[addr];
@@ -1709,6 +1741,8 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         lastUpdated: Date.now()
       };
       localStorage.setItem("kii_leaderboard_profiles_v2", JSON.stringify(registry));
+      // Sync profile to database globally
+      syncProfileToDb(addr, profileUsername, profileAvatar, profileTitle, level, totalXp, contractDeploys);
     }
   };
 

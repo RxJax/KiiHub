@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useWallet, WalletType, isEvmWallet } from "@/contexts/WalletContext";
+import { useWallet, WalletType, isEvmWallet, getEvmProviderObject } from "@/contexts/WalletContext";
 import { useQuests } from "@/contexts/QuestContext";
 import { POOL_REGISTRY } from "@/contexts/contracts";
 import { ethers } from "ethers";
@@ -100,8 +100,9 @@ export default function KiiSwapDEX() {
   }, []);
 
   const handleAddTokenToWallet = async (symbol: string) => {
-    if (typeof window === "undefined" || !(window as any).ethereum) {
-      showToast("MetaMask is not installed.", "error");
+    const providerObj = getEvmProviderObject(walletType) || (typeof window !== "undefined" ? (window as any).ethereum : null);
+    if (!providerObj) {
+      showToast("EVM Wallet is not connected or installed.", "error");
       return;
     }
     const tokenInfo = POOL_REGISTRY[symbol];
@@ -111,7 +112,7 @@ export default function KiiSwapDEX() {
     }
 
     try {
-      const wasAdded = await (window as any).ethereum.request({
+      const wasAdded = await providerObj.request({
         method: "wallet_watchAsset",
         params: {
           type: "ERC20",
@@ -125,9 +126,9 @@ export default function KiiSwapDEX() {
       });
 
       if (wasAdded) {
-        showToast(`${symbol} added to MetaMask!`, "success");
+        showToast(`${symbol} added to wallet!`, "success");
       } else {
-        showToast(`Failed to add ${symbol} to MetaMask.`, "error");
+        showToast(`Failed to add ${symbol} to wallet.`, "error");
       }
     } catch (error: any) {
       console.error(error);
@@ -1418,7 +1419,7 @@ export default function KiiSwapDEX() {
                     >
                       Balance: {fromToken === "KII" ? `${balance} KII` : `${stablecoinBalances[fromToken] || "0.0000"} ${fromToken}`}
                     </button>
-                    {fromToken !== "KII" && walletType === "metamask" && (
+                    {fromToken !== "KII" && isEvmWallet(walletType) && (
                       <button
                         onClick={() => handleAddTokenToWallet(fromToken)}
                         className="text-kii-blue hover:text-white transition-colors font-bold text-[9px] cursor-pointer"
@@ -1510,7 +1511,7 @@ export default function KiiSwapDEX() {
                     <span>
                       Balance: {toToken === "KII" ? `${balance} KII` : `${stablecoinBalances[toToken] || "0.0000"} ${toToken}`}
                     </span>
-                    {toToken !== "KII" && walletType === "metamask" && (
+                    {toToken !== "KII" && isEvmWallet(walletType) && (
                       <button
                         onClick={() => handleAddTokenToWallet(toToken)}
                         className="text-kii-blue hover:text-white transition-colors font-bold text-[9px] cursor-pointer"

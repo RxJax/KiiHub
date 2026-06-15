@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useWallet } from "../contexts/WalletContext";
+import { useWallet, isEvmWallet } from "../contexts/WalletContext";
 import { useQuests } from "../contexts/QuestContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { 
@@ -217,111 +217,93 @@ export default function Dashboard() {
   const [userRank, setUserRank] = useState<string>("-");
 
   useEffect(() => {
-    const registryStr = typeof window !== "undefined" ? localStorage.getItem("kii_leaderboard_profiles_v2") : null;
-    let registry: Record<string, any> = {};
-    if (registryStr) {
-      try {
-        registry = JSON.parse(registryStr);
-      } catch (e) {
-        console.error("Failed to parse registry", e);
-      }
-    }
-
     const sanitizeAddr = (address: string | null | undefined): string => {
       if (!address) return "";
       return address.trim().replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
     };
 
-    // Convert registry map to array
-    const profiles = Object.values(registry).map((p: any) => {
-      const pAddr = sanitizeAddr(p.address);
-      const dAddr = displayAddress ? sanitizeAddr(displayAddress) : "";
-      const isUser = dAddr ? pAddr === dAddr : false;
-      return {
-        username: p.name,
-        name: p.name,
-        avatar: p.avatar,
-        title: p.title || "Builder",
-        level: p.level || 1,
-        xp: p.xp || 0,
-        contracts: p.contracts || 0,
-        isUser,
-        address: pAddr
-      };
-    });
+    const fetchLeaderboard = async () => {
+      try {
+        const res = await fetch("/api/leaderboard");
+        if (!res.ok) throw new Error("Failed to fetch leaderboard");
+        const data = await res.json();
 
-    // Clean up invalid, demo, or mock keys from active display list
-    let filteredProfiles = profiles.filter((p: any) => {
-      const cleanAddr = sanitizeAddr(p.address);
-      return cleanAddr !== "0x_demo_user" && 
-             cleanAddr !== "null" && 
-             cleanAddr !== "undefined";
-    });
+        // Map database profiles to state format
+        let profiles = data.map((p: any, index: number) => {
+          const pAddr = sanitizeAddr(p.address);
+          const dAddr = displayAddress ? sanitizeAddr(displayAddress) : "";
+          const isUser = dAddr ? pAddr === dAddr : false;
+          return {
+            username: isUser ? (profileUsername || p.name) : p.name,
+            name: isUser ? (profileUsername || p.name) : p.name,
+            avatar: isUser ? (profileAvatar || p.avatar) : p.avatar,
+            title: isUser ? (profileTitle || p.title) : p.title,
+            level: isUser ? (level || p.level) : p.level,
+            xp: isUser ? (totalXp || p.xp) : p.xp,
+            contracts: isUser ? (transactions.filter(t => t.type.toLowerCase().includes("deploy") && t.status === "success").length || p.contracts) : p.contracts,
+            isUser,
+            address: pAddr,
+            rank: index + 1
+          };
+        });
 
-    // Ensure unique profiles by address (only keep one per address)
-    const uniqueProfilesMap: Record<string, any> = {};
-    filteredProfiles.forEach(p => {
-      const addrKey = sanitizeAddr(p.address);
-      if (addrKey) {
-        const existing = uniqueProfilesMap[addrKey];
-        if (!existing) {
-          uniqueProfilesMap[addrKey] = p;
+        // Optimistic update: if current active user isn't in database yet, add manually
+        const hasCurrentUser = profiles.some((p: any) => p.isUser);
+        if (!hasCurrentUser && displayAddress && totalXp > 0) {
+          const dAddr = sanitizeAddr(displayAddress);
+          const userDeploys = transactions.filter(t => t.type.toLowerCase().includes("deploy") && t.status === "success").length;
+          
+          profiles.push({
+            username: profileUsername || "Guest",
+            name: profileUsername || "Guest",
+            avatar: profileAvatar,
+            title: profileTitle,
+            level: level,
+            xp: totalXp,
+            contracts: userDeploys,
+            isUser: true,
+            address: dAddr,
+            rank: profiles.length + 1
+          });
+
+          // Re-sort descending by XP, then level, then contracts
+          profiles.sort((a: any, b: any) => {
+            if (b.xp !== a.xp) return b.xp - a.xp;
+            if (b.level !== a.level) return b.level - a.level;
+            return b.contracts - a.contracts;
+          });
+
+          // Re-assign ranks
+          profiles.forEach((entry: any, index: number) => {
+            entry.rank = index + 1;
+            entry.isCrown = index < 3;
+          });
         } else {
-          // Prefer active user profile over other entries
-          if (p.isUser) {
-            uniqueProfilesMap[addrKey] = p;
-          } else if (!existing.isUser && p.xp > existing.xp) {
-            uniqueProfilesMap[addrKey] = p;
-          }
+          // Add isCrown flag to fetched entries
+          profiles.forEach((entry: any, index: number) => {
+            entry.isCrown = index < 3;
+          });
         }
+
+        setGenuineLeaderboard(profiles);
+
+        // Find active user's rank
+        const userEntry = profiles.find((p: any) => p.isUser);
+        if (userEntry) {
+          setUserRank(`#${userEntry.rank}`);
+        } else {
+          setUserRank("-");
+        }
+      } catch (err) {
+        console.error("Failed to load global leaderboard in sidebar:", err);
       }
-    });
-    filteredProfiles = Object.values(uniqueProfilesMap);
+    };
 
-    // If current active user isn't in registry yet, add them manually (if connected and has XP)
-    const hasCurrentUser = filteredProfiles.some(p => p.isUser);
-    if (!hasCurrentUser && displayAddress && totalXp > 0) {
-      const dAddr = sanitizeAddr(displayAddress);
-      const userDeploys = transactions.filter(t => t.type.toLowerCase().includes("deploy") && t.status === "success").length;
-      filteredProfiles.push({
-        username: profileUsername || "Guest",
-        name: profileUsername || "Guest",
-        avatar: profileAvatar,
-        title: profileTitle,
-        level: level,
-        xp: totalXp,
-        contracts: userDeploys,
-        isUser: true,
-        address: dAddr
-      });
-    }
+    fetchLeaderboard();
 
-    // Only keep profiles that have earned XP (XP > 0)
-    filteredProfiles = filteredProfiles.filter((p: any) => p.xp > 0);
-
-    // Sort descending by XP, then by level, then by contracts
-    filteredProfiles.sort((a: any, b: any) => {
-      if (b.xp !== a.xp) return b.xp - a.xp;
-      if (b.level !== a.level) return b.level - a.level;
-      return b.contracts - a.contracts;
-    });
-
-    // Assign ranking indexes
-    const ranked = filteredProfiles.map((entry: any, index: number) => ({
-      ...entry,
-      rank: index + 1,
-      isCrown: index < 3
-    }));
-
-    setGenuineLeaderboard(ranked);
-
-    // Find active user's rank
-    const userEntry = ranked.find(p => p.isUser);
-    if (userEntry) {
-      setUserRank(`#${userEntry.rank}`);
-    } else {
-      setUserRank("-");
-    }
+    // Set up real-time polling every 5 seconds
+    const interval = setInterval(fetchLeaderboard, 5000);
+    return () => clearInterval(interval);
   }, [displayAddress, totalXp, transactions, profileUsername, profileTitle, profileAvatar, level]);
 
   const leaderboardData = genuineLeaderboard.slice(0, 5); // top 5 profiles
@@ -570,7 +552,7 @@ export default function Dashboard() {
 
           {/* User Wallet Pill */}
           {isConnected && displayAddress ? (
-            walletType === "metamask" && chainId !== 1336 ? (
+            isEvmWallet(walletType) && chainId !== 1336 ? (
               <button 
                 onClick={addNetworkToMetaMask}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-xs font-bold text-red-400 transition-colors cursor-pointer"
@@ -582,7 +564,7 @@ export default function Dashboard() {
             ) : (
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-brand-black border border-brand-border text-xs font-semibold text-zinc-300">
                 <div className="w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-kii-purple to-kii-blue flex-shrink-0 flex items-center justify-center border border-white/10 text-[9px]">
-                  {walletType === "metamask" ? "🦊" : "🌌"}
+                  {isEvmWallet(walletType) ? "🦊" : "🌌"}
                 </div>
                 <span className="font-mono text-white">{displayAddress.slice(0, 6)}...{displayAddress.slice(-4)}</span>
               </div>
