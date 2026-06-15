@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const rawData = getLeaderboard();
+    const rawData = await getLeaderboard();
     const data = Array.isArray(rawData) ? rawData : [];
     
     // Serialization & Privacy Check: return correct public profile data 
@@ -33,7 +33,6 @@ export async function GET() {
   }
 }
 
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -43,7 +42,7 @@ export async function POST(request: Request) {
       for (const item of body) {
         const { address, name, avatar, title, level, xp, contracts } = item;
         if (address && name) {
-          upsertUser({
+          await upsertUser({
             address: address.toLowerCase(),
             username: name,
             avatar: avatar || "🚀",
@@ -64,7 +63,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Address and Name are required" }, { status: 400 });
     }
 
-    upsertUser({
+    await upsertUser({
       address: address.toLowerCase(),
       username: name,
       avatar: avatar || "🚀",

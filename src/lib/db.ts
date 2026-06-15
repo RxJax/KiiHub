@@ -1,69 +1,61 @@
-// @ts-ignore
-import { DatabaseSync } from "node:sqlite";
-import path from "path";
-import fs from "fs";
+import { Pool } from "pg";
 import { EventEmitter } from "events";
 
-const isVercel = process.env.VERCEL === "1" || process.env.NOW_BUILDER === "1";
-let DB_PATH = path.join(process.cwd(), "kii_builder.db");
-
-if (isVercel) {
-  const tmpDbPath = path.join("/tmp", "kii_builder.db");
-  // Copy the seeded database from the read-only workspace to /tmp if it doesn't exist
-  if (!fs.existsSync(tmpDbPath)) {
-    try {
-      if (fs.existsSync(DB_PATH)) {
-        fs.copyFileSync(DB_PATH, tmpDbPath);
-        console.log("[DB Vercel] Seeded kii_builder.db copied to /tmp successfully.");
-      } else {
-        console.warn("[DB Vercel] Seeded kii_builder.db not found at:", DB_PATH);
-      }
-    } catch (e) {
-      console.warn("[DB Vercel] Failed to copy kii_builder.db to /tmp:", e);
-    }
-  }
-  DB_PATH = tmpDbPath;
-}
+const databaseUrl = process.env.DATABASE_URL;
 
 // Define a global event emitter for database events
 export const dbEvents = new EventEmitter();
 
-// Log global events to satisfy the trigger requirement
+// Log global events
 dbEvents.on("xpChanged", (event) => {
   console.log(`[Global DB Event] User ${event.address} (${event.username}) XP updated: ${event.oldXp} -> ${event.newXp}`);
 });
 
-// Persist database instance across hot reloads in Next.js development mode
-const globalForDb = globalThis as unknown as {
-  db: DatabaseSync | undefined;
+// Cache database connection pool across hot reloads in development and serverless executions
+const globalForPg = globalThis as unknown as {
+  pgPool: Pool | undefined;
 };
 
-export function getDb(): DatabaseSync {
-  if (!globalForDb.db) {
-    const dbInstance = new DatabaseSync(DB_PATH);
-    
-    // Create users table
-    dbInstance.exec(`
-      CREATE TABLE IF NOT EXISTS users (
-        address TEXT PRIMARY KEY,
-        username TEXT NOT NULL,
-        avatar TEXT,
-        title TEXT,
-        level INTEGER DEFAULT 1,
-        total_xp INTEGER DEFAULT 0,
-        contracts INTEGER DEFAULT 0,
-        last_updated INTEGER
-      );
-    `);
-
-    // Seeding mock users disabled. Only real users who have earned XP will show up.
-    
-    globalForDb.db = dbInstance;
+export function getPool(): Pool {
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL environment variable is missing. Please add it to your .env.local file.");
   }
-  return globalForDb.db;
+  if (!globalForPg.pgPool) {
+    globalForPg.pgPool = new Pool({
+      connectionString: databaseUrl,
+      ssl: {
+        rejectUnauthorized: false
+      },
+      max: 10, // Max concurrent connections in pool
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    });
+  }
+  return globalForPg.pgPool;
 }
 
-export function upsertUser(user: {
+let isInitialized = false;
+
+export async function initDb() {
+  if (isInitialized) return;
+  const pool = getPool();
+  
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      address VARCHAR(255) PRIMARY KEY,
+      username VARCHAR(255) NOT NULL,
+      avatar TEXT,
+      title VARCHAR(255),
+      level INTEGER DEFAULT 1,
+      total_xp INTEGER DEFAULT 0,
+      contracts INTEGER DEFAULT 0,
+      last_updated BIGINT
+    );
+  `);
+  isInitialized = true;
+}
+
+export async function upsertUser(user: {
   address: string;
   username: string;
   avatar: string;
@@ -72,31 +64,30 @@ export function upsertUser(user: {
   total_xp: number;
   contracts: number;
 }) {
-  const database = getDb();
+  await initDb();
+  const pool = getPool();
   
   // Clean / normalize address
   const cleanAddr = user.address.trim().toLowerCase();
 
   // Get previous XP to determine if it changed
-  const stmtSelect = database.prepare("SELECT total_xp FROM users WHERE address = ?");
-  const row = stmtSelect.get(cleanAddr) as { total_xp: number } | undefined;
+  const selectRes = await pool.query("SELECT total_xp FROM users WHERE address = $1", [cleanAddr]);
+  const row = selectRes.rows[0];
   const oldXp = row ? row.total_xp : null;
 
-  const stmt = database.prepare(`
-    INSERT INTO users (address, username, avatar, title, level, total_xp, contracts, last_updated)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(address) DO UPDATE SET
-      username = excluded.username,
-      avatar = excluded.avatar,
-      title = excluded.title,
-      level = excluded.level,
-      total_xp = excluded.total_xp,
-      contracts = excluded.contracts,
-      last_updated = excluded.last_updated
-  `);
-  
   const now = Date.now();
-  stmt.run(
+  await pool.query(`
+    INSERT INTO users (address, username, avatar, title, level, total_xp, contracts, last_updated)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    ON CONFLICT (address) DO UPDATE SET
+      username = EXCLUDED.username,
+      avatar = EXCLUDED.avatar,
+      title = EXCLUDED.title,
+      level = EXCLUDED.level,
+      total_xp = EXCLUDED.total_xp,
+      contracts = EXCLUDED.contracts,
+      last_updated = EXCLUDED.last_updated
+  `, [
     cleanAddr,
     user.username,
     user.avatar,
@@ -105,7 +96,7 @@ export function upsertUser(user: {
     user.total_xp,
     user.contracts,
     now
-  );
+  ]);
 
   // If XP changed, emit global event
   if (oldXp === null || oldXp !== user.total_xp) {
@@ -118,8 +109,9 @@ export function upsertUser(user: {
   }
 }
 
-export function getLeaderboard() {
-  const database = getDb();
+export async function getLeaderboard() {
+  await initDb();
+  const pool = getPool();
   
   const query = `
     SELECT address, username, avatar, title, 
@@ -132,8 +124,8 @@ export function getLeaderboard() {
     LIMIT 100
   `;
 
-  const stmt = database.prepare(query);
-  return (stmt.all() || []) as Array<{
+  const res = await pool.query(query);
+  return (res.rows || []) as Array<{
     address: string;
     username: string;
     avatar: string;
@@ -143,4 +135,3 @@ export function getLeaderboard() {
     contracts: number;
   }>;
 }
-
