@@ -16,7 +16,8 @@ import {
   Clock,
   CheckCircle2,
   TrendingUp,
-  History
+  History,
+  Sparkles
 } from "lucide-react";
 import Link from "next/link";
 
@@ -261,116 +262,217 @@ export default function HallOfFame() {
           )}
         </div>
 
-        {/* Live Leaderboard Table */}
-        <div className="glass-panel p-6 rounded-xl border border-brand-border space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4 text-kii-blue" />
-              Ranks & Metrics Table
-              <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-0.5 rounded-full ml-1">
-                <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping" />
-                <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-widest font-sans">Live</span>
-              </span>
-            </h3>
-            <span className="text-[10px] text-zinc-500 font-medium">Updates dynamically based on your active quests & games</span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          {/* Live Leaderboard Table */}
+          <div className="lg:col-span-2 glass-panel p-6 rounded-xl border border-brand-border space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4 text-kii-blue" />
+                Ranks & Metrics Table
+                <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-0.5 rounded-full ml-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-widest font-sans">Live</span>
+                </span>
+              </h3>
+              <span className="text-[10px] text-zinc-500 font-medium">Updates dynamically based on your active quests & games</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-zinc-400">
+                <thead>
+                  <tr className="border-b border-brand-border text-left text-zinc-500">
+                    <th className="pb-3 font-semibold w-16">Rank</th>
+                    <th className="pb-3 font-semibold">Builder Profile</th>
+                    <th className="pb-3 font-semibold">RPG Title</th>
+                    <th className="pb-3 font-semibold">Level Rank</th>
+                    <th className="pb-3 font-semibold text-right">Total XP</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-brand-border/40 font-mono">
+                  {leaderboard.length > 0 ? (
+                    leaderboard.map((entry) => {
+                      const isMe = entry.address?.toLowerCase() === displayAddress?.toLowerCase();
+                      const displayName = isMe ? `${entry.name || "Guest"} (You)` : (entry.name || "Guest");
+                      
+                      return (
+                        <tr 
+                          key={entry.address || entry.name} 
+                          className={`hover:bg-white/[0.02] hover:scale-[1.003] active:scale-[0.999] transition-all duration-200 relative ${
+                            isMe 
+                              ? "font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.2)] z-10" 
+                              : ""
+                          }`}
+                        >
+                          <td className={`py-3.5 pl-3 transition-colors duration-200 ${
+                            isMe 
+                              ? "border-y-2 border-l-2 border-kii-purple rounded-l-lg bg-kii-purple/[0.08]" 
+                              : ""
+                          }`}>
+                            <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-transform duration-200 ${
+                              isMe ? "scale-110" : ""
+                            } ${
+                              entry.rank === 1 
+                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.25)] animate-pulse" 
+                                : entry.rank === 2
+                                ? "bg-slate-400/10 text-slate-300 border border-slate-400/20"
+                                : entry.rank === 3
+                                ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
+                                : "bg-white/[0.02] border border-white/[0.04] text-zinc-400"
+                            }`}>
+                              {entry.rank}
+                            </span>
+                          </td>
+                          <td className={`py-3.5 transition-colors duration-200 ${
+                            isMe 
+                              ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
+                              : ""
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-sm transition-transform duration-200 hover:rotate-12 ${isMe ? "scale-125" : ""}`}>{entry.avatar}</span>
+                              <div className="flex flex-col">
+                                <span className="font-sans text-white font-bold flex items-center gap-1.5">
+                                  {displayName}
+                                  {isMe && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-kii-blue animate-ping" />
+                                  )}
+                                </span>
+                              </div>
+                              {isMe && (
+                                <span className="text-[8px] font-bold text-kii-blue tracking-wide uppercase px-1 rounded bg-kii-blue/10 border border-kii-blue/20">
+                                  YOU
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className={`py-3.5 text-zinc-400 font-sans transition-colors duration-200 ${
+                            isMe 
+                              ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
+                              : ""
+                          }`}>{entry.title}</td>
+                          <td className={`py-3.5 text-zinc-400 font-sans transition-colors duration-200 ${
+                            isMe 
+                              ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
+                              : ""
+                          }`}>Lvl {entry.level}</td>
+                          <td className={`py-3.5 pr-3 text-right font-extrabold text-white text-sm transition-colors duration-200 ${
+                            isMe 
+                              ? "border-y-2 border-r-2 border-kii-purple rounded-r-lg bg-kii-purple/[0.08]" 
+                              : ""
+                          }`}>
+                            {entry.xp.toLocaleString()} XP
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-zinc-500 font-sans">
+                        No entries yet. Connect your wallet to join the leaderboard!
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-zinc-400">
-              <thead>
-                <tr className="border-b border-brand-border text-left text-zinc-500">
-                  <th className="pb-3 font-semibold w-16">Rank</th>
-                  <th className="pb-3 font-semibold">Builder Profile</th>
-                  <th className="pb-3 font-semibold">RPG Title</th>
-                  <th className="pb-3 font-semibold">Level Rank</th>
-                  <th className="pb-3 font-semibold text-right">Total XP</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-brand-border/40 font-mono">
-                {leaderboard.length > 0 ? (
-                  leaderboard.map((entry) => {
-                    const isMe = entry.address?.toLowerCase() === displayAddress?.toLowerCase();
-                    const displayName = isMe ? `${entry.name || "Guest"} (You)` : (entry.name || "Guest");
+          {/* Credits Panel / Special Thanks */}
+          <div className="lg:col-span-1 flex flex-col justify-stretch">
+            <div className="glass-panel p-6 rounded-xl border border-brand-border bg-gradient-to-b from-white/[0.01] to-transparent space-y-5 h-full flex flex-col justify-between relative overflow-hidden">
+              {/* Decorative background glow */}
+              <div className="absolute top-0 right-0 w-36 h-36 rounded-full bg-kii-purple/5 blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-36 h-36 rounded-full bg-kii-blue/5 blur-3xl pointer-events-none" />
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-amber-400 animate-bounce" />
+                    Hub Contributors
+                  </h3>
+                  <span className="flex items-center gap-1 bg-kii-purple/10 border border-kii-purple/20 px-2 py-0.5 rounded-full">
+                    <Sparkles className="w-2.5 h-2.5 text-kii-purple-light" />
+                    <span className="text-[7.5px] font-black text-kii-purple-light uppercase tracking-wider font-mono">Special Credits</span>
+                  </span>
+                </div>
+                
+                <p className="text-zinc-500 text-[10.5px] leading-relaxed font-sans">
+                  The pioneers behind the architecture, features, integrations, and community support channels of the Kii Chain Builder Hub.
+                </p>
+
+                <div className="space-y-4 pt-2">
+                  
+                  {/* Website Dev - RxJax */}
+                  <a 
+                    href="https://x.com/rxjax007" 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="block group relative rounded-xl border border-brand-border hover:border-kii-blue/45 bg-zinc-950/40 p-4 transition-all duration-300 hover:scale-[1.03] hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(14,165,233,0.15)] overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-kii-blue/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     
-                    return (
-                      <tr 
-                        key={entry.address || entry.name} 
-                        className={`hover:bg-white/[0.02] hover:scale-[1.003] active:scale-[0.999] transition-all duration-200 relative ${
-                          isMe 
-                            ? "font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.2)] z-10" 
-                            : ""
-                        }`}
-                      >
-                        <td className={`py-3.5 pl-3 transition-colors duration-200 ${
-                          isMe 
-                            ? "border-y-2 border-l-2 border-kii-purple rounded-l-lg bg-kii-purple/[0.08]" 
-                            : ""
-                        }`}>
-                          <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-transform duration-200 ${
-                            isMe ? "scale-110" : ""
-                          } ${
-                            entry.rank === 1 
-                              ? "bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.25)] animate-pulse" 
-                              : entry.rank === 2
-                              ? "bg-slate-400/10 text-slate-300 border border-slate-400/20"
-                              : entry.rank === 3
-                              ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-                              : "bg-white/[0.02] border border-white/[0.04] text-zinc-400"
-                          }`}>
-                            {entry.rank}
+                    <div className="flex items-center justify-between relative z-10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-lg bg-kii-blue/10 border border-kii-blue/20 flex items-center justify-center text-xl shadow-inner group-hover:scale-110 transition-transform duration-300">
+                          🦊
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-white group-hover:text-kii-blue transition-colors flex items-center gap-1.5">
+                            RxJax
+                            <span className="text-[7px] font-black uppercase bg-kii-blue/10 text-kii-blue px-1 tracking-wide border border-kii-blue/20">
+                              Core Dev
+                            </span>
                           </span>
-                        </td>
-                        <td className={`py-3.5 transition-colors duration-200 ${
-                          isMe 
-                            ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
-                            : ""
-                        }`}>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-sm transition-transform duration-200 hover:rotate-12 ${isMe ? "scale-125" : ""}`}>{entry.avatar}</span>
-                            <div className="flex flex-col">
-                              <span className="font-sans text-white font-bold flex items-center gap-1.5">
-                                {displayName}
-                                {isMe && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-kii-blue animate-ping" />
-                                )}
-                              </span>
-                            </div>
-                            {isMe && (
-                              <span className="text-[8px] font-bold text-kii-blue tracking-wide uppercase px-1 rounded bg-kii-blue/10 border border-kii-blue/20">
-                                YOU
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className={`py-3.5 text-zinc-400 font-sans transition-colors duration-200 ${
-                          isMe 
-                            ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
-                            : ""
-                        }`}>{entry.title}</td>
-                        <td className={`py-3.5 text-zinc-400 font-sans transition-colors duration-200 ${
-                          isMe 
-                            ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
-                            : ""
-                        }`}>Lvl {entry.level}</td>
-                        <td className={`py-3.5 pr-3 text-right font-extrabold text-white text-sm transition-colors duration-200 ${
-                          isMe 
-                            ? "border-y-2 border-r-2 border-kii-purple rounded-r-lg bg-kii-purple/[0.08]" 
-                            : ""
-                        }`}>
-                          {entry.xp.toLocaleString()} XP
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-zinc-500 font-sans">
-                      No entries yet. Connect your wallet to join the leaderboard!
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                          <span className="text-[9.5px] text-zinc-500 font-medium mt-0.5">Website Dev & Architect</span>
+                        </div>
+                      </div>
+                      <div className="w-6 h-6 rounded-full bg-zinc-900 border border-brand-border flex items-center justify-center text-zinc-500 group-hover:text-white group-hover:border-kii-blue/40 transition-colors">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                  </a>
+
+                  {/* Special Assistant - CryptoAdvancers */}
+                  <a 
+                    href="https://x.com/cryptoadvancers" 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="block group relative rounded-xl border border-brand-border hover:border-kii-purple/45 bg-zinc-950/40 p-4 transition-all duration-300 hover:scale-[1.03] hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-kii-purple/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    <div className="flex items-center justify-between relative z-10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-lg bg-kii-purple/10 border border-kii-purple/20 flex items-center justify-center text-xl shadow-inner group-hover:scale-110 transition-transform duration-300">
+                          🔮
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-white group-hover:text-kii-purple-light transition-colors flex items-center gap-1.5">
+                            CryptoAdvancers
+                            <span className="text-[7px] font-black uppercase bg-kii-purple/10 text-kii-purple-light px-1 tracking-wide border border-kii-purple/20">
+                              Assistant
+                            </span>
+                          </span>
+                          <span className="text-[9.5px] text-zinc-500 font-medium mt-0.5">Special Assistant & Moderator</span>
+                        </div>
+                      </div>
+                      <div className="w-6 h-6 rounded-full bg-zinc-900 border border-brand-border flex items-center justify-center text-zinc-500 group-hover:text-white group-hover:border-kii-purple/40 transition-colors">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                  </a>
+
+                </div>
+              </div>
+
+              {/* Status footer */}
+              <div className="border-t border-brand-border/40 pt-4 mt-6 flex items-center justify-between text-[9px] font-medium text-zinc-500 relative z-10">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Active Contributors
+                </span>
+                <span>Version 2.0.4</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
