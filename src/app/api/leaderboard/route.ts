@@ -16,9 +16,9 @@ export async function GET() {
       name: user ? user.username : "",
       avatar: (user && user.avatar) || "🚀",
       title: (user && user.title) || "Newcomer",
-      level: user ? user.level : 1,
-      xp: user ? user.total_xp : 0,
-      contracts: user ? user.contracts : 0
+      level: user?.level ?? 1,
+      xp: user?.total_xp ?? 0,
+      contracts: user?.contracts ?? 0
     }));
 
     return NextResponse.json(serialized, {

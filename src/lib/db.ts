@@ -170,7 +170,7 @@ export function getLeaderboard() {
   // Check if there are any users with total_xp > 0
   let hasPositiveXp = false;
   try {
-    const stmtCheck = database.prepare("SELECT COUNT(*) as count FROM users WHERE total_xp > 0");
+    const stmtCheck = database.prepare("SELECT COUNT(*) as count FROM users WHERE COALESCE(total_xp, 0) > 0");
     const result = stmtCheck.get() as { count: number };
     hasPositiveXp = result && result.count > 0;
   } catch (e) {
@@ -181,15 +181,19 @@ export function getLeaderboard() {
   // Otherwise, sort by total_xp DESC, level DESC, contracts DESC, username ASC.
   const query = hasPositiveXp
     ? `
-      SELECT address, username, avatar, title, level, total_xp, contracts
+      SELECT address, username, avatar, title, 
+             COALESCE(level, 1) as level, 
+             COALESCE(total_xp, 0) as total_xp, 
+             COALESCE(contracts, 0) as contracts
       FROM users
-      WHERE total_xp >= 0
-      ORDER BY total_xp DESC, level DESC, contracts DESC, username ASC
+      ORDER BY COALESCE(total_xp, 0) DESC, COALESCE(level, 1) DESC, COALESCE(contracts, 0) DESC, username ASC
     `
     : `
-      SELECT address, username, avatar, title, level, total_xp, contracts
+      SELECT address, username, avatar, title, 
+             COALESCE(level, 1) as level, 
+             COALESCE(total_xp, 0) as total_xp, 
+             COALESCE(contracts, 0) as contracts
       FROM users
-      WHERE total_xp >= 0
       ORDER BY username ASC
     `;
 
