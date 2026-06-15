@@ -173,9 +173,9 @@ export default function HallOfFame() {
   // Extract Podium spots (top 3)
   const isLeaderboardEmpty = leaderboard.length === 0 || leaderboard.every(e => e.xp === 0);
   const podiumSpots = {
-    first: !isLeaderboardEmpty ? leaderboard.find(e => e.rank === 1) : undefined,
-    second: !isLeaderboardEmpty ? leaderboard.find(e => e.rank === 2) : undefined,
-    third: !isLeaderboardEmpty ? leaderboard.find(e => e.rank === 3) : undefined,
+    first: !isLeaderboardEmpty ? leaderboard[0] : undefined,
+    second: !isLeaderboardEmpty ? leaderboard[1] : undefined,
+    third: !isLeaderboardEmpty ? leaderboard[2] : undefined,
   };
 
   // Get completed quests for activity logging

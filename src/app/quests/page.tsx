@@ -312,9 +312,9 @@ export default function QuestsHub() {
     (activeLeaderboardTab !== "xp" && leaderboardData.every(e => e.metricValue === 0));
 
   const podiumSpots = {
-    first: !isLeaderboardTabEmpty ? leaderboardData.find(e => e.rank === 1) : undefined,
-    second: !isLeaderboardTabEmpty ? leaderboardData.find(e => e.rank === 2) : undefined,
-    third: !isLeaderboardTabEmpty ? leaderboardData.find(e => e.rank === 3) : undefined,
+    first: !isLeaderboardTabEmpty ? leaderboardData[0] : undefined,
+    second: !isLeaderboardTabEmpty ? leaderboardData[1] : undefined,
+    third: !isLeaderboardTabEmpty ? leaderboardData[2] : undefined,
   };
 
   const unlockedBadges = achievements.filter(a => a.unlocked).length;
