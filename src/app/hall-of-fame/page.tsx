@@ -412,8 +412,8 @@ export default function HallOfFame() {
                     
                     <div className="flex items-center justify-between relative z-10">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-lg bg-kii-blue/10 border border-kii-blue/20 flex items-center justify-center text-xl shadow-inner group-hover:scale-110 transition-transform duration-300">
-                          🦊
+                        <div className="w-11 h-11 rounded-lg overflow-hidden border border-kii-blue/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300">
+                          <img src="/RxJax.jpg" alt="RxJax" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-white group-hover:text-kii-blue transition-colors flex items-center gap-1.5">
@@ -442,8 +442,8 @@ export default function HallOfFame() {
                     
                     <div className="flex items-center justify-between relative z-10">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-lg bg-kii-purple/10 border border-kii-purple/20 flex items-center justify-center text-xl shadow-inner group-hover:scale-110 transition-transform duration-300">
-                          🔮
+                        <div className="w-11 h-11 rounded-lg overflow-hidden border border-kii-purple/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300">
+                          <img src="/CryptoAdvancer.jpg" alt="CryptoAdvancers" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-white group-hover:text-kii-purple-light transition-colors flex items-center gap-1.5">
