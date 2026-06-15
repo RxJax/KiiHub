@@ -5,19 +5,20 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const data = getLeaderboard();
+    const rawData = getLeaderboard();
+    const data = Array.isArray(rawData) ? rawData : [];
     
     // Serialization & Privacy Check: return correct public profile data 
     // (wallet address/handle, Level, and XP, along with public avatar/title/contracts)
     // while keeping sensitive account details private.
     const serialized = data.map((user) => ({
-      address: user.address,
-      name: user.username,
-      avatar: user.avatar,
-      title: user.title,
-      level: user.level,
-      xp: user.total_xp,
-      contracts: user.contracts
+      address: user ? user.address : "",
+      name: user ? user.username : "",
+      avatar: (user && user.avatar) || "🚀",
+      title: (user && user.title) || "Newcomer",
+      level: user ? user.level : 1,
+      xp: user ? user.total_xp : 0,
+      contracts: user ? user.contracts : 0
     }));
 
     return NextResponse.json(serialized, {
@@ -31,6 +32,7 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
 
 export async function POST(request: Request) {
   try {

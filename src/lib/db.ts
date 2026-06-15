@@ -166,15 +166,35 @@ export function upsertUser(user: {
 
 export function getLeaderboard() {
   const database = getDb();
-  // Pull all user accounts, sorting them automatically in descending order based on their total XP, with alphabetical fallback
-  const stmt = database.prepare(`
-    SELECT address, username, avatar, title, level, total_xp, contracts
-    FROM users
-    WHERE total_xp >= 0
-    ORDER BY total_xp DESC, level DESC, contracts DESC, username ASC
-  `);
   
-  return stmt.all() as Array<{
+  // Check if there are any users with total_xp > 0
+  let hasPositiveXp = false;
+  try {
+    const stmtCheck = database.prepare("SELECT COUNT(*) as count FROM users WHERE total_xp > 0");
+    const result = stmtCheck.get() as { count: number };
+    hasPositiveXp = result && result.count > 0;
+  } catch (e) {
+    console.warn("Failed to check positive XP:", e);
+  }
+
+  // If all users have 0 XP (or table is empty), default to alphabetical sorting by username ASC.
+  // Otherwise, sort by total_xp DESC, level DESC, contracts DESC, username ASC.
+  const query = hasPositiveXp
+    ? `
+      SELECT address, username, avatar, title, level, total_xp, contracts
+      FROM users
+      WHERE total_xp >= 0
+      ORDER BY total_xp DESC, level DESC, contracts DESC, username ASC
+    `
+    : `
+      SELECT address, username, avatar, title, level, total_xp, contracts
+      FROM users
+      WHERE total_xp >= 0
+      ORDER BY username ASC
+    `;
+
+  const stmt = database.prepare(query);
+  return (stmt.all() || []) as Array<{
     address: string;
     username: string;
     avatar: string;
@@ -184,3 +204,4 @@ export function getLeaderboard() {
     contracts: number;
   }>;
 }
+

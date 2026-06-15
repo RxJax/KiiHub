@@ -99,8 +99,14 @@ export default function HallOfFame() {
           });
         }
 
+        // Check if all users are tied at 0 XP
+        const allZeroXp = ranked.length === 0 || ranked.every((p: any) => p.xp === 0);
+
         // ALWAYS sort descending by XP, then level, then contracts, then name (alphabetical fallback) after applying client overrides
         ranked.sort((a: any, b: any) => {
+          if (allZeroXp) {
+            return (a.name || "").localeCompare(b.name || "");
+          }
           if (b.xp !== a.xp) return b.xp - a.xp;
           if (b.level !== a.level) return b.level - a.level;
           if (b.contracts !== a.contracts) return b.contracts - a.contracts;
@@ -115,14 +121,15 @@ export default function HallOfFame() {
         setLeaderboard(ranked);
 
         // Compute shelf stats
-        if (ranked.length > 0) {
-          let maxContractsProj = ranked[0];
-          let maxContractsVal = ranked[0].contracts;
+        const activeEntries = ranked.filter((entry: any) => entry.xp > 0 || entry.contracts > 0);
+        if (activeEntries.length > 0) {
+          let maxContractsProj = activeEntries[0];
+          let maxContractsVal = activeEntries[0].contracts;
           
-          let maxXpProj = ranked[0];
-          let maxXpVal = ranked[0].xp;
+          let maxXpProj = activeEntries[0];
+          let maxXpVal = activeEntries[0].xp;
           
-          for (let entry of ranked) {
+          for (let entry of activeEntries) {
             if (entry.contracts > maxContractsVal) {
               maxContractsVal = entry.contracts;
               maxContractsProj = entry;
@@ -143,6 +150,13 @@ export default function HallOfFame() {
             highestXpUser: formatName(maxXpProj),
             highestXpCount: maxXpVal
           });
+        } else {
+          setShelfStats({
+            mostContractsUser: "None",
+            mostContractsCount: 0,
+            highestXpUser: "None",
+            highestXpCount: 0
+          });
         }
       } catch (err) {
         console.error("Failed to load global leaderboard data:", err);
@@ -157,10 +171,11 @@ export default function HallOfFame() {
   }, [totalXp, level, profileUsername, profileAvatar, profileTitle, transactions, displayAddress]);
 
   // Extract Podium spots (top 3)
+  const isLeaderboardEmpty = leaderboard.length === 0 || leaderboard.every(e => e.xp === 0);
   const podiumSpots = {
-    first: leaderboard.find(e => e.rank === 1),
-    second: leaderboard.find(e => e.rank === 2),
-    third: leaderboard.find(e => e.rank === 3),
+    first: !isLeaderboardEmpty ? leaderboard.find(e => e.rank === 1) : undefined,
+    second: !isLeaderboardEmpty ? leaderboard.find(e => e.rank === 2) : undefined,
+    third: !isLeaderboardEmpty ? leaderboard.find(e => e.rank === 3) : undefined,
   };
 
   // Get completed quests for activity logging
@@ -280,7 +295,7 @@ export default function HallOfFame() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-brand-border/40 font-mono">
-                {leaderboard.length > 0 ? (
+                {leaderboard.length > 0 && !leaderboard.every(e => e.xp === 0) ? (
                   leaderboard.map((entry) => (
                     <tr 
                       key={entry.address || entry.name} 

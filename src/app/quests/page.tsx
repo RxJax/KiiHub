@@ -257,8 +257,17 @@ export default function QuestsHub() {
         // Keep profiles that have at least 0 XP
         mappedProfiles = mappedProfiles.filter((p: any) => p.xp >= 0);
 
+        const allZeroXp = mappedProfiles.every((p: any) => p.xp === 0);
+        const allZeroMetric = mappedProfiles.every((p: any) => p.metricValue === 0);
+
         // Sort descending by metricValue, then level, then alphabetical name fallback
         mappedProfiles.sort((a: any, b: any) => {
+          if (activeLeaderboardTab === "xp" && allZeroXp) {
+            return (a.name || "").localeCompare(b.name || "");
+          }
+          if (activeLeaderboardTab !== "xp" && allZeroMetric) {
+            return (a.name || "").localeCompare(b.name || "");
+          }
           if (b.metricValue !== a.metricValue) return b.metricValue - a.metricValue;
           if (b.xp !== a.xp) return b.xp - a.xp;
           if (b.level !== a.level) return b.level - a.level;
@@ -298,10 +307,14 @@ export default function QuestsHub() {
   ]);
   
   // Extract Podium spots (top 3)
+  const isLeaderboardTabEmpty = leaderboardData.length === 0 || 
+    (activeLeaderboardTab === "xp" && leaderboardData.every(e => e.xp === 0)) ||
+    (activeLeaderboardTab !== "xp" && leaderboardData.every(e => e.metricValue === 0));
+
   const podiumSpots = {
-    first: leaderboardData.find(e => e.rank === 1),
-    second: leaderboardData.find(e => e.rank === 2),
-    third: leaderboardData.find(e => e.rank === 3),
+    first: !isLeaderboardTabEmpty ? leaderboardData.find(e => e.rank === 1) : undefined,
+    second: !isLeaderboardTabEmpty ? leaderboardData.find(e => e.rank === 2) : undefined,
+    third: !isLeaderboardTabEmpty ? leaderboardData.find(e => e.rank === 3) : undefined,
   };
 
   const unlockedBadges = achievements.filter(a => a.unlocked).length;
@@ -707,7 +720,7 @@ export default function QuestsHub() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-brand-border/40 font-mono">
-                  {leaderboardData.length > 0 ? (
+                  {!isLeaderboardTabEmpty ? (
                     leaderboardData.map((entry) => (
                       <tr 
                         key={entry.address || entry.name} 

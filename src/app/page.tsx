@@ -267,8 +267,14 @@ export default function Dashboard() {
           });
         }
 
+        // Check if all users are tied at 0 XP
+        const allZeroXp = profiles.every((p: any) => p.xp === 0);
+
         // ALWAYS sort descending by XP, then level, then contracts, then name (alphabetical fallback) after applying client overrides
         profiles.sort((a: any, b: any) => {
+          if (allZeroXp) {
+            return (a.name || "").localeCompare(b.name || "");
+          }
           if (b.xp !== a.xp) return b.xp - a.xp;
           if (b.level !== a.level) return b.level - a.level;
           if (b.contracts !== a.contracts) return b.contracts - a.contracts;
@@ -890,7 +896,7 @@ export default function Dashboard() {
 
               {/* Leaderboard Entries */}
               <div className="space-y-2">
-                {leaderboardData.length > 0 ? (
+                {leaderboardData.length > 0 && !leaderboardData.every(e => e.xp === 0) ? (
                   leaderboardData.map((user) => (
                     <div 
                       key={user.address || `${user.username}-${user.rank}`}
