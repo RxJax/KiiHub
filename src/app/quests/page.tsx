@@ -186,89 +186,33 @@ export default function QuestsHub() {
         const data = await res.json();
         console.log("Raw API Payload:", data);
 
-        // Read local storage registry to merge extra stats if available
-        const registryStr = typeof window !== "undefined" ? localStorage.getItem("kii_leaderboard_profiles_v2") : null;
-        let localRegistry: Record<string, any> = {};
-        if (registryStr) {
-          try {
-            localRegistry = JSON.parse(registryStr);
-          } catch (e) {}
-        }
-
         let mappedProfiles = data.map((p: any) => {
           const pAddr = sanitizeAddress(p.address);
-          const dAddr = displayAddress ? sanitizeAddress(displayAddress) : "";
-          const isUser = dAddr ? pAddr === dAddr : false;
-
-          // Merge local registry data if available for private stats (transactionsCount, projectsCount, referralsCount)
-          const localProf = localRegistry[pAddr] || {};
           
-          let metricValue = isUser ? totalXp : p.xp;
+          let metricValue = p.xp ?? 0;
           if (activeLeaderboardTab === "deploys") {
-            metricValue = isUser ? (transactions.filter(t => t.type.includes("Deploy")).length) : (p.contracts || 0);
+            metricValue = p.contracts ?? 0;
           } else if (activeLeaderboardTab === "tx") {
-            metricValue = isUser ? Math.max(realTxCount, transactions.length) : (localProf.transactionsCount || 0);
+            metricValue = p.contracts ?? 0; // fallback
           } else if (activeLeaderboardTab === "projects") {
-            metricValue = isUser ? projects.length : (localProf.projectsCount || 0);
+            metricValue = p.contracts ?? 0; // fallback
           } else if (activeLeaderboardTab === "referrals") {
-            metricValue = isUser ? referredUsers.length : (localProf.referralsCount || 0);
+            metricValue = 0; // fallback
           }
 
           return {
-            rank: 1,
             address: pAddr,
-            name: isUser ? `${profileUsername || p.name} (You)` : p.name,
-            avatar: isUser ? (profileAvatar || p.avatar) : p.avatar,
-            title: isUser ? (profileTitle || p.title) : p.title,
-            level: isUser ? (level || p.level) : p.level,
-            xp: isUser ? (totalXp || p.xp) : p.xp,
-            metricValue,
-            isUser
+            name: p.name || "Anonymous",
+            avatar: p.avatar || "🚀",
+            title: p.title || "Newcomer",
+            level: p.level ?? 1,
+            xp: p.xp ?? 0,
+            metricValue
           };
         });
 
-        // Optimistic update: if current active user isn't in global database yet, add manually (if connected and has XP)
-        const hasCurrentUser = mappedProfiles.some((p: any) => p.isUser);
-        if (!hasCurrentUser && displayAddress && totalXp > 0) {
-          const dAddr = sanitizeAddress(displayAddress);
-          let userVal = totalXp;
-          if (activeLeaderboardTab === "deploys") {
-            userVal = transactions.filter(t => t.type.includes("Deploy")).length;
-          } else if (activeLeaderboardTab === "tx") {
-            userVal = Math.max(realTxCount, transactions.length);
-          } else if (activeLeaderboardTab === "projects") {
-            userVal = projects.length;
-          } else if (activeLeaderboardTab === "referrals") {
-            userVal = referredUsers.length;
-          }
-
-          mappedProfiles.push({
-            rank: 1,
-            address: dAddr,
-            name: `${profileUsername} (You)`,
-            avatar: profileAvatar,
-            title: profileTitle,
-            level: level,
-            xp: totalXp,
-            metricValue: userVal,
-            isUser: true
-          });
-        }
-
-        // Keep profiles that have at least 0 XP
-        mappedProfiles = mappedProfiles.filter((p: any) => p.xp >= 0);
-
-        const allZeroXp = mappedProfiles.every((p: any) => p.xp === 0);
-        const allZeroMetric = mappedProfiles.every((p: any) => p.metricValue === 0);
-
         // Sort descending by metricValue, then level, then alphabetical name fallback
         mappedProfiles.sort((a: any, b: any) => {
-          if (activeLeaderboardTab === "xp" && allZeroXp) {
-            return (a.name || "").localeCompare(b.name || "");
-          }
-          if (activeLeaderboardTab !== "xp" && allZeroMetric) {
-            return (a.name || "").localeCompare(b.name || "");
-          }
           if (b.metricValue !== a.metricValue) return b.metricValue - a.metricValue;
           if (b.xp !== a.xp) return b.xp - a.xp;
           if (b.level !== a.level) return b.level - a.level;
@@ -295,16 +239,7 @@ export default function QuestsHub() {
   }, [
     activeTab,
     activeLeaderboardTab,
-    displayAddress,
-    totalXp,
-    transactions,
-    projects,
-    referredUsers,
-    profileUsername,
-    profileAvatar,
-    profileTitle,
-    level,
-    realTxCount
+    displayAddress
   ]);
   
   // Extract Podium spots (top 3)
@@ -314,33 +249,13 @@ export default function QuestsHub() {
     if (!entry) return null;
     const entryAddr = sanitizeAddress(entry.address);
     const userAddr = displayAddress ? sanitizeAddress(displayAddress) : "";
-    const isUser = userAddr ? entryAddr === userAddr : false;
+    const isMe = userAddr ? entryAddr === userAddr : false;
     const baseName = entry.name ? entry.name.replace(" (You)", "") : "";
     
-    let metricValue = entry.metricValue;
-    if (isUser) {
-      if (activeLeaderboardTab === "xp") {
-        metricValue = totalXp;
-      } else if (activeLeaderboardTab === "deploys") {
-        metricValue = transactions.filter(t => t.type.includes("Deploy")).length;
-      } else if (activeLeaderboardTab === "tx") {
-        metricValue = Math.max(realTxCount, transactions.length);
-      } else if (activeLeaderboardTab === "projects") {
-        metricValue = projects.length;
-      } else if (activeLeaderboardTab === "referrals") {
-        metricValue = referredUsers.length;
-      }
-    }
-
     return {
       ...entry,
-      name: isUser ? `${profileUsername || baseName} (You)` : baseName,
-      avatar: isUser ? (profileAvatar || entry.avatar) : entry.avatar,
-      title: isUser ? (profileTitle || entry.title) : entry.title,
-      level: isUser ? (level || entry.level) : entry.level,
-      xp: isUser ? (totalXp || entry.xp) : entry.xp,
-      metricValue,
-      isUser
+      name: isMe ? `${baseName} (You)` : baseName,
+      isUser: isMe
     };
   };
 
@@ -760,41 +675,45 @@ export default function QuestsHub() {
                 </thead>
                 <tbody className="divide-y divide-brand-border/40 font-mono">
                   {!isLeaderboardTabEmpty ? (
-                    leaderboardData.map((entry) => (
-                      <tr 
-                        key={entry.address || entry.name} 
-                        className={`hover:bg-white/[0.01] ${
-                          entry.isUser 
-                            ? "bg-kii-purple/5 border border-brand-border-purple/35 font-bold text-white" 
-                            : ""
-                        }`}
-                      >
-                        <td className="py-3.5">
-                          <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs ${
-                            entry.rank === 1 
-                              ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" 
-                              : entry.rank === 2
-                              ? "bg-slate-400/10 text-slate-300 border border-slate-400/20"
-                              : entry.rank === 3
-                              ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-                              : "bg-white/[0.02] border border-white/[0.04] text-zinc-400"
-                          }`}>
-                            {entry.rank}
-                          </span>
-                        </td>
-                        <td className="py-3.5 text-zinc-300">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">{entry.avatar}</span>
-                            <div className="flex flex-col">
-                              <span className="font-sans text-white font-bold">{entry.name}</span>
+                    leaderboardData.map((entry) => {
+                      const isMe = entry.address?.toLowerCase() === displayAddress?.toLowerCase();
+                      const displayName = isMe ? `${entry.name || "Guest"} (You)` : (entry.name || "Guest");
+                      
+                      return (
+                        <tr 
+                          key={entry.address || entry.name} 
+                          className={`hover:bg-white/[0.01] ${
+                            isMe 
+                              ? "bg-kii-purple/5 border border-brand-border-purple/35 font-bold text-white" 
+                              : ""
+                          }`}
+                        >
+                          <td className="py-3.5">
+                            <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs ${
+                              entry.rank === 1 
+                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" 
+                                : entry.rank === 2
+                                ? "bg-slate-400/10 text-slate-300 border border-slate-400/20"
+                                : entry.rank === 3
+                                ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
+                                : "bg-white/[0.02] border border-white/[0.04] text-zinc-400"
+                            }`}>
+                              {entry.rank}
+                            </span>
+                          </td>
+                          <td className="py-3.5 text-zinc-300">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">{entry.avatar}</span>
+                              <div className="flex flex-col">
+                                <span className="font-sans text-white font-bold">{displayName}</span>
+                              </div>
+                              {isMe && (
+                                <span className="text-[8px] font-bold text-kii-blue tracking-wide uppercase px-1 rounded bg-kii-blue/10 border border-kii-blue/20">
+                                  YOU
+                                </span>
+                              )}
                             </div>
-                            {entry.isUser && (
-                              <span className="text-[8px] font-bold text-kii-blue tracking-wide uppercase px-1 rounded bg-kii-blue/10 border border-kii-blue/20">
-                                YOU
-                              </span>
-                            )}
-                          </div>
-                        </td>
+                          </td>
                         <td className="py-3.5 text-zinc-400 font-sans">{entry.title}</td>
                         <td className="py-3.5 text-zinc-400 font-sans">Lvl {entry.level}</td>
                         <td className="py-3.5 text-right font-extrabold text-white text-sm">
@@ -806,7 +725,8 @@ export default function QuestsHub() {
                           }
                         </td>
                       </tr>
-                    ))
+                      );
+                    })
                   ) : (
                     <tr>
                       <td colSpan={5} className="py-8 text-center text-zinc-500 font-sans">
