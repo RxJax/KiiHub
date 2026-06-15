@@ -13,14 +13,17 @@ dbEvents.on("xpChanged", (event) => {
   console.log(`[Global DB Event] User ${event.address} (${event.username}) XP updated: ${event.oldXp} -> ${event.newXp}`);
 });
 
-let db: DatabaseSync | null = null;
+// Persist database instance across hot reloads in Next.js development mode
+const globalForDb = globalThis as unknown as {
+  db: DatabaseSync | undefined;
+};
 
 export function getDb(): DatabaseSync {
-  if (!db) {
-    db = new DatabaseSync(DB_PATH);
+  if (!globalForDb.db) {
+    const dbInstance = new DatabaseSync(DB_PATH);
     
     // Create users table
-    db.exec(`
+    dbInstance.exec(`
       CREATE TABLE IF NOT EXISTS users (
         address TEXT PRIMARY KEY,
         username TEXT NOT NULL,
@@ -35,7 +38,7 @@ export function getDb(): DatabaseSync {
 
     // Seed mock profiles if the database is brand new and empty
     try {
-      const stmtCheck = db.prepare("SELECT COUNT(*) as count FROM users");
+      const stmtCheck = dbInstance.prepare("SELECT COUNT(*) as count FROM users");
       const result = stmtCheck.get() as { count: number };
       if (result.count === 0) {
         const initialUsers = [
@@ -77,7 +80,7 @@ export function getDb(): DatabaseSync {
           }
         ];
 
-        const stmtInsert = db.prepare(`
+        const stmtInsert = dbInstance.prepare(`
           INSERT INTO users (address, username, avatar, title, level, total_xp, contracts, last_updated)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `);
@@ -100,8 +103,10 @@ export function getDb(): DatabaseSync {
     } catch (e: any) {
       console.warn("Failed to check or seed initial user profiles:", e.message);
     }
+    
+    globalForDb.db = dbInstance;
   }
-  return db;
+  return globalForDb.db;
 }
 
 export function upsertUser(user: {
