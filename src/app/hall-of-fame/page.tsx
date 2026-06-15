@@ -171,7 +171,7 @@ export default function HallOfFame() {
   }, [totalXp, level, profileUsername, profileAvatar, profileTitle, transactions, displayAddress]);
 
   // Extract Podium spots (top 3)
-  const isLeaderboardEmpty = leaderboard.length === 0 || leaderboard.every(e => e.xp === 0);
+  const isLeaderboardEmpty = leaderboard.length === 0;
 
   const getPodiumCardData = (entry: any) => {
     if (!entry) return null;
@@ -314,7 +314,7 @@ export default function HallOfFame() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-brand-border/40 font-mono">
-                {leaderboard.length > 0 && !leaderboard.every(e => e.xp === 0) ? (
+                {leaderboard.length > 0 ? (
                   leaderboard.map((entry) => (
                     <tr 
                       key={entry.address || entry.name} 

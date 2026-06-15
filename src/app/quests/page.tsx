@@ -307,9 +307,7 @@ export default function QuestsHub() {
   ]);
   
   // Extract Podium spots (top 3)
-  const isLeaderboardTabEmpty = leaderboardData.length === 0 || 
-    (activeLeaderboardTab === "xp" && leaderboardData.every(e => e.xp === 0)) ||
-    (activeLeaderboardTab !== "xp" && leaderboardData.every(e => e.metricValue === 0));
+  const isLeaderboardTabEmpty = leaderboardData.length === 0;
 
   const getPodiumCardData = (entry: any) => {
     if (!entry) return null;

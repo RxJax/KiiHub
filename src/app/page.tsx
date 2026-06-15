@@ -896,7 +896,7 @@ export default function Dashboard() {
 
               {/* Leaderboard Entries */}
               <div className="space-y-2">
-                {leaderboardData.length > 0 && !leaderboardData.every(e => e.xp === 0) ? (
+                {leaderboardData.length > 0 ? (
                   leaderboardData.map((user) => (
                     <div 
                       key={user.address || `${user.username}-${user.rank}`}
