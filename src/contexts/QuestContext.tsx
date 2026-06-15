@@ -431,6 +431,10 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [dailyCountdown, setDailyCountdown] = useState<string>("23h 59m 59s");
   const [weeklyCountdown, setWeeklyCountdown] = useState<string>("6d 23h 59m 59s");
   const [seasonDaysRemaining, setSeasonDaysRemaining] = useState<number>(30);
+  const [questsHydrated, setQuestsHydrated] = useState<boolean>(false);
+  const [hydratedAddress, setHydratedAddress] = useState<string | null>(null);
+
+  const isFullyHydrated = !!displayAddress && questsHydrated && hydratedAddress === sanitizeAddress(displayAddress);
 
   // Sync profile details to the backend global database
   const syncProfileToDb = (
@@ -478,10 +482,16 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setProfileAvatar("🔒");
       setTotalXp(0);
       setDailyChallenges([]);
+      setQuestsHydrated(false);
+      setHydratedAddress(null);
       return;
     }
 
     const addr = sanitizeAddress(displayAddress);
+    
+    // Reset hydratedAddress at the start of the effect to prevent other hooks from running with stale address/state
+    setQuestsHydrated(false);
+    setHydratedAddress(null);
 
     // Migrate demo user data to target address if target address has no XP
     const targetXpKey = `kii_total_xp_v2_${addr}`;
@@ -677,11 +687,13 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Generate referral code
     const generatedRef = "KII-" + Math.random().toString(36).substring(2, 8).toUpperCase();
     setReferralCode(generatedRef);
+    setQuestsHydrated(true);
+    setHydratedAddress(addr);
   }, [displayAddress]);
 
   // Generate default profile on first activity
   useEffect(() => {
-    if (typeof window === "undefined" || !displayAddress) return;
+    if (typeof window === "undefined" || !isFullyHydrated) return;
     const addr = sanitizeAddress(displayAddress);
     
     const hasActivity = totalXp > 0 || transactions.length > 0;
@@ -699,7 +711,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         localStorage.setItem(`kii_profile_title_${addr}`, "Newcomer");
       }
     }
-  }, [displayAddress, totalXp, transactions, profileUsername]);
+  }, [displayAddress, totalXp, transactions, profileUsername, hydratedAddress, isFullyHydrated]);
 
   // Bulk sync previous leaderboard profiles from localStorage to global database
   useEffect(() => {
@@ -899,7 +911,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Quest daily cooldown auto-refresh effect (resets at UTC midnight)
   useEffect(() => {
-    if (!displayAddress) return;
+    if (!isFullyHydrated) return;
     const interval = setInterval(() => {
       const now = Date.now();
       let changed = false;
@@ -929,11 +941,11 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [displayAddress]);
+  }, [displayAddress, hydratedAddress, isFullyHydrated]);
 
   // Weekly missions 1-week timer and countdown effect
   useEffect(() => {
-    if (!displayAddress) return;
+    if (!isFullyHydrated) return;
     const addr = sanitizeAddress(displayAddress);
 
     const interval = setInterval(() => {
@@ -963,19 +975,20 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [displayAddress]);
+  }, [displayAddress, hydratedAddress, isFullyHydrated]);
 
   // Monitor Wallet status
   useEffect(() => {
+    if (!isFullyHydrated) return;
     if (isConnected) {
       completeQuest("connect_wallet");
       unlockAchievement("early_builder");
     }
-  }, [isConnected]);
+  }, [isConnected, displayAddress, hydratedAddress, isFullyHydrated]);
 
   // Monitor transactions feed and realTxCount for dynamic quest and weekly mission validation
   useEffect(() => {
-    if (!displayAddress) return;
+    if (!isFullyHydrated) return;
     
     const now = new Date();
     const startOfUTCDay = Date.UTC(
@@ -1134,11 +1147,11 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }, 0);
       }
     });
-  }, [transactions, realTxCount, displayAddress]);
+  }, [transactions, realTxCount, displayAddress, hydratedAddress, isFullyHydrated]);
 
   // Dynamically calculate Send 3 Transactions daily quest progress from transactions array
   useEffect(() => {
-    if (!displayAddress) return;
+    if (!isFullyHydrated) return;
     const addr = sanitizeAddress(displayAddress);
     const generatedAtStr = localStorage.getItem(`kii_daily_generated_at_${addr}`);
     const generatedAt = generatedAtStr ? Number(generatedAtStr) : Date.now();
@@ -1172,11 +1185,11 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.setItem(`kii_daily_v2_${addr}`, JSON.stringify(copy));
       return copy;
     });
-  }, [transactions, displayAddress]);
+  }, [transactions, displayAddress, hydratedAddress, isFullyHydrated]);
 
   // Achievements unlocking based on level status and activity
   useEffect(() => {
-    if (!displayAddress) return;
+    if (!isFullyHydrated) return;
     const addr = sanitizeAddress(displayAddress);
 
     const isLocked = (id: string) => {
@@ -1287,7 +1300,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       completeQuest("quest_kiichain_sovereign");
     }
 
-  }, [level, achievements, transactions, quests, projects, isConnected, displayAddress, realTxCount, stablecoinBalances, totalXp]);
+  }, [level, achievements, transactions, quests, projects, isConnected, displayAddress, realTxCount, stablecoinBalances, totalXp, hydratedAddress, isFullyHydrated]);
 
   // Complete a general board quest
   const completeQuest = (id: string) => {
@@ -1515,7 +1528,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Update registry of profiles whenever active user stats/profile details update
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !isFullyHydrated) return;
     const contractDeploys = transactions.filter(t => t.type.includes("Deploy")).length;
     
     const registryStr = localStorage.getItem("kii_leaderboard_profiles_v2");
@@ -1610,11 +1623,11 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     
     localStorage.setItem("kii_leaderboard_profiles_v2", JSON.stringify(registry));
-  }, [displayAddress, profileUsername, profileAvatar, profileTitle, level, totalXp, transactions, projects, referredUsers, realTxCount, globalActivities]);
+  }, [displayAddress, profileUsername, profileAvatar, profileTitle, level, totalXp, transactions, projects, referredUsers, realTxCount, globalActivities, hydratedAddress, isFullyHydrated]);
 
   // Dynamically calculate Community Goals based on real statistics of wallets/users
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !isFullyHydrated) return;
 
     const registryStr = localStorage.getItem("kii_leaderboard_profiles_v2");
     let registry: Record<string, any> = {};
@@ -1687,7 +1700,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setCommunityGoals(updatedGoals);
     localStorage.setItem(`kii_community_v2_${sanitizeAddress(displayAddress || "0x_demo_user")}`, JSON.stringify(updatedGoals));
-  }, [displayAddress, transactions, projects, quests, realTxCount]);
+  }, [displayAddress, transactions, projects, quests, realTxCount, hydratedAddress, isFullyHydrated]);
 
   const trackSwapAction = (fromToken: string, toToken: string, amount: number) => {
     const addr = sanitizeAddress(displayAddress || "0x_demo_user");
