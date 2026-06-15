@@ -682,9 +682,9 @@ export default function QuestsHub() {
                       return (
                         <tr 
                           key={entry.address || entry.name} 
-                          className={`hover:bg-white/[0.01] ${
+                          className={`hover:bg-white/[0.01] transition-all duration-200 ${
                             isMe 
-                              ? "bg-kii-purple/5 border border-brand-border-purple/35 font-bold text-white" 
+                              ? "bg-kii-purple/10 border-y-2 border-kii-purple font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.35)]" 
                               : ""
                           }`}
                         >

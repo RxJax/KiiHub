@@ -71,39 +71,15 @@ export default function HallOfFame() {
           
           return {
             ...entry,
-            name: isUser ? `${profileUsername || entry.name} (You)` : entry.name,
-            avatar: isUser ? (profileAvatar || entry.avatar) : entry.avatar,
-            title: isUser ? (profileTitle || entry.title) : entry.title,
-            level: isUser ? (level || entry.level) : entry.level,
-            xp: isUser ? (totalXp || entry.xp) : entry.xp,
             isUser,
             rank: index + 1
           };
         });
 
-        // Optimistic update: if current active user isn't in global database yet, add manually (if connected and has XP)
-        const hasCurrentUser = ranked.some((p: any) => p.isUser);
-        if (!hasCurrentUser && displayAddress && totalXp > 0) {
-          const dAddr = sanitizeAddress(displayAddress);
-          const userVal = transactions.filter(t => t.type.includes("Deploy")).length;
-          
-          ranked.push({
-            name: `${profileUsername} (You)`,
-            avatar: profileAvatar,
-            title: profileTitle,
-            level: level,
-            xp: totalXp,
-            contracts: userVal,
-            isUser: true,
-            address: dAddr,
-            rank: ranked.length + 1
-          });
-        }
-
         // Check if all users are tied at 0 XP
         const allZeroXp = ranked.length === 0 || ranked.every((p: any) => p.xp === 0);
 
-        // ALWAYS sort descending by XP, then level, then contracts, then name (alphabetical fallback) after applying client overrides
+        // ALWAYS sort descending by XP, then level, then contracts, then name (alphabetical fallback)
         ranked.sort((a: any, b: any) => {
           if (allZeroXp) {
             return (a.name || "").localeCompare(b.name || "");
@@ -140,15 +116,11 @@ export default function HallOfFame() {
               maxXpProj = entry;
             }
           }
-          
-          const formatName = (entry: any) => {
-            return entry.isUser ? entry.name.replace(" (You)", "") : entry.name;
-          };
 
           setShelfStats({
-            mostContractsUser: formatName(maxContractsProj),
+            mostContractsUser: maxContractsProj.name,
             mostContractsCount: maxContractsVal,
-            highestXpUser: formatName(maxXpProj),
+            highestXpUser: maxXpProj.name,
             highestXpCount: maxXpVal
           });
         } else {
@@ -183,11 +155,7 @@ export default function HallOfFame() {
     
     return {
       ...entry,
-      name: isUser ? `${profileUsername || baseName} (You)` : baseName,
-      avatar: isUser ? (profileAvatar || entry.avatar) : entry.avatar,
-      title: isUser ? (profileTitle || entry.title) : entry.title,
-      level: isUser ? (level || entry.level) : entry.level,
-      xp: isUser ? (totalXp || entry.xp) : entry.xp,
+      name: isUser ? `${baseName} (You)` : baseName,
       isUser
     };
   };
@@ -323,9 +291,9 @@ export default function HallOfFame() {
                     return (
                       <tr 
                         key={entry.address || entry.name} 
-                        className={`hover:bg-white/[0.01] ${
+                        className={`hover:bg-white/[0.01] transition-all duration-200 ${
                           isMe 
-                            ? "bg-kii-purple/5 border border-brand-border-purple/35 font-bold text-white" 
+                            ? "bg-kii-purple/10 border-y-2 border-kii-purple font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.35)]" 
                             : ""
                         }`}
                       >

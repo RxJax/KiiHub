@@ -235,43 +235,23 @@ export default function Dashboard() {
           const dAddr = displayAddress ? sanitizeAddr(displayAddress) : "";
           const isUser = dAddr ? pAddr === dAddr : false;
           return {
-            username: isUser ? (profileUsername || p.name) : p.name,
-            name: isUser ? (profileUsername || p.name) : p.name,
-            avatar: isUser ? (profileAvatar || p.avatar) : p.avatar,
-            title: isUser ? (profileTitle || p.title) : p.title,
-            level: isUser ? (level || p.level) : p.level,
-            xp: isUser ? (totalXp || p.xp) : p.xp,
-            contracts: isUser ? (transactions.filter(t => t.type.toLowerCase().includes("deploy") && t.status === "success").length || p.contracts) : p.contracts,
+            username: p.name || "Guest",
+            name: p.name || "Guest",
+            avatar: p.avatar,
+            title: p.title,
+            level: p.level,
+            xp: p.xp,
+            contracts: p.contracts,
             isUser,
             address: pAddr,
             rank: index + 1
           };
         });
 
-        // Optimistic update: if current active user isn't in database yet, add manually
-        const hasCurrentUser = profiles.some((p: any) => p.isUser);
-        if (!hasCurrentUser && displayAddress && totalXp > 0) {
-          const dAddr = sanitizeAddr(displayAddress);
-          const userDeploys = transactions.filter(t => t.type.toLowerCase().includes("deploy") && t.status === "success").length;
-          
-          profiles.push({
-            username: profileUsername || "Guest",
-            name: profileUsername || "Guest",
-            avatar: profileAvatar,
-            title: profileTitle,
-            level: level,
-            xp: totalXp,
-            contracts: userDeploys,
-            isUser: true,
-            address: dAddr,
-            rank: profiles.length + 1
-          });
-        }
-
         // Check if all users are tied at 0 XP
         const allZeroXp = profiles.every((p: any) => p.xp === 0);
 
-        // ALWAYS sort descending by XP, then level, then contracts, then name (alphabetical fallback) after applying client overrides
+        // ALWAYS sort descending by XP, then level, then contracts, then name (alphabetical fallback)
         profiles.sort((a: any, b: any) => {
           if (allZeroXp) {
             return (a.name || "").localeCompare(b.name || "");
@@ -903,7 +883,7 @@ export default function Dashboard() {
                       key={user.address || `${user.username}-${user.rank}`}
                       className={`p-2.5 rounded-lg border transition-all flex items-center justify-between ${
                         user.isUser 
-                          ? "bg-kii-purple/10 border-kii-purple/30 shadow shadow-kii-purple/5" 
+                          ? "bg-kii-purple/10 border-kii-purple font-bold text-white shadow-[0_0_12px_rgba(168,85,247,0.35)]" 
                           : "bg-white/[0.01] border-brand-border/60 hover:bg-white/[0.03]"
                       }`}
                     >
@@ -916,7 +896,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className={`text-[10.5px] font-bold truncate ${user.isUser ? "text-white" : "text-zinc-300"}`}>
-                            {user.username}
+                            {user.isUser ? `${user.username || "Guest"} (You)` : (user.username || "Guest")}
                           </span>
                           <span className="text-[8.5px] text-zinc-500 truncate leading-none">
                             {user.title || "Builder"}
