@@ -170,7 +170,7 @@ export function getLeaderboard() {
   const stmt = database.prepare(`
     SELECT address, username, avatar, title, level, total_xp, contracts
     FROM users
-    WHERE total_xp > 0
+    WHERE total_xp >= 0
     ORDER BY total_xp DESC, level DESC, contracts DESC
   `);
   
