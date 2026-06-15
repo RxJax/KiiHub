@@ -172,10 +172,29 @@ export default function HallOfFame() {
 
   // Extract Podium spots (top 3)
   const isLeaderboardEmpty = leaderboard.length === 0 || leaderboard.every(e => e.xp === 0);
+
+  const getPodiumCardData = (entry: any) => {
+    if (!entry) return null;
+    const entryAddr = sanitizeAddress(entry.address);
+    const userAddr = displayAddress ? sanitizeAddress(displayAddress) : "";
+    const isUser = userAddr ? entryAddr === userAddr : false;
+    const baseName = entry.name ? entry.name.replace(" (You)", "") : "";
+    
+    return {
+      ...entry,
+      name: isUser ? `${profileUsername || baseName} (You)` : baseName,
+      avatar: isUser ? (profileAvatar || entry.avatar) : entry.avatar,
+      title: isUser ? (profileTitle || entry.title) : entry.title,
+      level: isUser ? (level || entry.level) : entry.level,
+      xp: isUser ? (totalXp || entry.xp) : entry.xp,
+      isUser
+    };
+  };
+
   const podiumSpots = {
-    first: !isLeaderboardEmpty ? leaderboard[0] : undefined,
-    second: !isLeaderboardEmpty ? leaderboard[1] : undefined,
-    third: !isLeaderboardEmpty ? leaderboard[2] : undefined,
+    first: !isLeaderboardEmpty ? getPodiumCardData(leaderboard[0]) : null,
+    second: !isLeaderboardEmpty ? getPodiumCardData(leaderboard[1]) : null,
+    third: !isLeaderboardEmpty ? getPodiumCardData(leaderboard[2]) : null,
   };
 
   // Get completed quests for activity logging

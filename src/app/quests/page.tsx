@@ -311,10 +311,44 @@ export default function QuestsHub() {
     (activeLeaderboardTab === "xp" && leaderboardData.every(e => e.xp === 0)) ||
     (activeLeaderboardTab !== "xp" && leaderboardData.every(e => e.metricValue === 0));
 
+  const getPodiumCardData = (entry: any) => {
+    if (!entry) return null;
+    const entryAddr = sanitizeAddress(entry.address);
+    const userAddr = displayAddress ? sanitizeAddress(displayAddress) : "";
+    const isUser = userAddr ? entryAddr === userAddr : false;
+    const baseName = entry.name ? entry.name.replace(" (You)", "") : "";
+    
+    let metricValue = entry.metricValue;
+    if (isUser) {
+      if (activeLeaderboardTab === "xp") {
+        metricValue = totalXp;
+      } else if (activeLeaderboardTab === "deploys") {
+        metricValue = transactions.filter(t => t.type.includes("Deploy")).length;
+      } else if (activeLeaderboardTab === "tx") {
+        metricValue = Math.max(realTxCount, transactions.length);
+      } else if (activeLeaderboardTab === "projects") {
+        metricValue = projects.length;
+      } else if (activeLeaderboardTab === "referrals") {
+        metricValue = referredUsers.length;
+      }
+    }
+
+    return {
+      ...entry,
+      name: isUser ? `${profileUsername || baseName} (You)` : baseName,
+      avatar: isUser ? (profileAvatar || entry.avatar) : entry.avatar,
+      title: isUser ? (profileTitle || entry.title) : entry.title,
+      level: isUser ? (level || entry.level) : entry.level,
+      xp: isUser ? (totalXp || entry.xp) : entry.xp,
+      metricValue,
+      isUser
+    };
+  };
+
   const podiumSpots = {
-    first: !isLeaderboardTabEmpty ? leaderboardData[0] : undefined,
-    second: !isLeaderboardTabEmpty ? leaderboardData[1] : undefined,
-    third: !isLeaderboardTabEmpty ? leaderboardData[2] : undefined,
+    first: !isLeaderboardTabEmpty ? getPodiumCardData(leaderboardData[0]) : null,
+    second: !isLeaderboardTabEmpty ? getPodiumCardData(leaderboardData[1]) : null,
+    third: !isLeaderboardTabEmpty ? getPodiumCardData(leaderboardData[2]) : null,
   };
 
   const unlockedBadges = achievements.filter(a => a.unlocked).length;
@@ -631,7 +665,9 @@ export default function QuestsHub() {
             
             {/* Rank 2 - Silver podium */}
             {podiumSpots.second && (
-              <div className="glass-panel p-5 rounded-xl border border-brand-border relative flex flex-col items-center justify-center text-center h-[210px] md:order-1 order-2">
+              <div className={`glass-panel p-5 rounded-xl border relative flex flex-col items-center justify-center text-center h-[210px] md:order-1 order-2 ${
+                podiumSpots.second.isUser ? "border-kii-purple/40 bg-kii-purple/5" : "border-brand-border"
+              }`}>
                 <div className="absolute -top-6 w-12 h-12 rounded-full border border-slate-400/40 bg-zinc-950 flex items-center justify-center shadow-lg">
                   <span className="text-xl">{podiumSpots.second.avatar}</span>
                 </div>
@@ -653,7 +689,9 @@ export default function QuestsHub() {
 
             {/* Rank 1 - Gold podium */}
             {podiumSpots.first && (
-              <div className="glass-panel p-6 rounded-xl border border-brand-border-purple/35 bg-gradient-to-tr from-kii-purple/10 to-transparent relative flex flex-col items-center justify-center text-center h-[250px] md:order-2 order-1 shadow-2xl relative">
+              <div className={`glass-panel p-6 rounded-xl border bg-gradient-to-tr from-kii-purple/10 to-transparent relative flex flex-col items-center justify-center text-center h-[250px] md:order-2 order-1 shadow-2xl relative ${
+                podiumSpots.first.isUser ? "border-amber-400/60 bg-amber-400/5" : "border-brand-border-purple/35"
+              }`}>
                 <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-kii-purple to-kii-blue rounded-t-xl" />
                 <div className="absolute -top-8 w-16 h-16 rounded-full border-2 border-amber-400 bg-zinc-950 flex items-center justify-center shadow-2xl">
                   <span className="text-2xl">{podiumSpots.first.avatar}</span>
@@ -676,7 +714,9 @@ export default function QuestsHub() {
 
             {/* Rank 3 - Bronze podium */}
             {podiumSpots.third && (
-              <div className="glass-panel p-5 rounded-xl border border-brand-border relative flex flex-col items-center justify-center text-center h-[190px] md:order-3 order-3">
+              <div className={`glass-panel p-5 rounded-xl border relative flex flex-col items-center justify-center text-center h-[190px] md:order-3 order-3 ${
+                podiumSpots.third.isUser ? "border-kii-purple/40 bg-kii-purple/5" : "border-brand-border"
+              }`}>
                 <div className="absolute -top-6 w-12 h-12 rounded-full border border-orange-500/40 bg-zinc-950 flex items-center justify-center shadow-lg">
                   <span className="text-xl">{podiumSpots.third.avatar}</span>
                 </div>
