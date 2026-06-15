@@ -1,9 +1,29 @@
 // @ts-ignore
 import { DatabaseSync } from "node:sqlite";
 import path from "path";
+import fs from "fs";
 import { EventEmitter } from "events";
 
-const DB_PATH = path.join(process.cwd(), "kii_builder.db");
+const isVercel = process.env.VERCEL === "1" || process.env.NOW_BUILDER === "1";
+let DB_PATH = path.join(process.cwd(), "kii_builder.db");
+
+if (isVercel) {
+  const tmpDbPath = path.join("/tmp", "kii_builder.db");
+  // Copy the seeded database from the read-only workspace to /tmp if it doesn't exist
+  if (!fs.existsSync(tmpDbPath)) {
+    try {
+      if (fs.existsSync(DB_PATH)) {
+        fs.copyFileSync(DB_PATH, tmpDbPath);
+        console.log("[DB Vercel] Seeded kii_builder.db copied to /tmp successfully.");
+      } else {
+        console.warn("[DB Vercel] Seeded kii_builder.db not found at:", DB_PATH);
+      }
+    } catch (e) {
+      console.warn("[DB Vercel] Failed to copy kii_builder.db to /tmp:", e);
+    }
+  }
+  DB_PATH = tmpDbPath;
+}
 
 // Define a global event emitter for database events
 export const dbEvents = new EventEmitter();
