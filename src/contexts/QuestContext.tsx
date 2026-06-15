@@ -1062,7 +1062,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (idx === -1) return prev;
       
       const mission = prev[idx];
-      const nextProgress = Math.min(mission.target, totalTxs);
+      const nextProgress = Math.max(mission.progress, Math.min(mission.target, totalTxs));
       
       if (mission.progress === nextProgress && mission.completed === (nextProgress >= mission.target)) {
         return prev;
@@ -1196,7 +1196,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (idx === -1) return prev;
       
       const task = prev[idx];
-      const nextProgress = Math.min(task.target, count);
+      const nextProgress = Math.max(task.progress, Math.min(task.target, count));
       
       if (task.progress === nextProgress && task.completed === (nextProgress >= task.target)) {
         return prev;
