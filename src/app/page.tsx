@@ -265,25 +265,20 @@ export default function Dashboard() {
             address: dAddr,
             rank: profiles.length + 1
           });
-
-          // Re-sort descending by XP, then level, then contracts
-          profiles.sort((a: any, b: any) => {
-            if (b.xp !== a.xp) return b.xp - a.xp;
-            if (b.level !== a.level) return b.level - a.level;
-            return b.contracts - a.contracts;
-          });
-
-          // Re-assign ranks
-          profiles.forEach((entry: any, index: number) => {
-            entry.rank = index + 1;
-            entry.isCrown = index < 3;
-          });
-        } else {
-          // Add isCrown flag to fetched entries
-          profiles.forEach((entry: any, index: number) => {
-            entry.isCrown = index < 3;
-          });
         }
+
+        // ALWAYS sort descending by XP, then level, then contracts after applying client overrides
+        profiles.sort((a: any, b: any) => {
+          if (b.xp !== a.xp) return b.xp - a.xp;
+          if (b.level !== a.level) return b.level - a.level;
+          return b.contracts - a.contracts;
+        });
+
+        // ALWAYS re-assign ranks based on final sorted order
+        profiles.forEach((entry: any, index: number) => {
+          entry.rank = index + 1;
+          entry.isCrown = index < 3;
+        });
 
         setGenuineLeaderboard(profiles);
 

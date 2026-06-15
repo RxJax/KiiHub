@@ -97,19 +97,19 @@ export default function HallOfFame() {
             address: dAddr,
             rank: ranked.length + 1
           });
-
-          // Sort descending by XP, then level, then contracts
-          ranked.sort((a: any, b: any) => {
-            if (b.xp !== a.xp) return b.xp - a.xp;
-            if (b.level !== a.level) return b.level - a.level;
-            return b.contracts - a.contracts;
-          });
-
-          // Re-assign ranks
-          ranked.forEach((entry: any, index: number) => {
-            entry.rank = index + 1;
-          });
         }
+
+        // ALWAYS sort descending by XP, then level, then contracts after applying client overrides
+        ranked.sort((a: any, b: any) => {
+          if (b.xp !== a.xp) return b.xp - a.xp;
+          if (b.level !== a.level) return b.level - a.level;
+          return b.contracts - a.contracts;
+        });
+
+        // ALWAYS re-assign ranks based on final sorted order
+        ranked.forEach((entry: any, index: number) => {
+          entry.rank = index + 1;
+        });
 
         setLeaderboard(ranked);
 

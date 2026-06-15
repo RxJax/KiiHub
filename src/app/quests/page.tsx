@@ -198,9 +198,9 @@ export default function QuestsHub() {
           // Merge local registry data if available for private stats (transactionsCount, projectsCount, referralsCount)
           const localProf = localRegistry[pAddr] || {};
           
-          let metricValue = p.xp;
+          let metricValue = isUser ? totalXp : p.xp;
           if (activeLeaderboardTab === "deploys") {
-            metricValue = p.contracts || 0;
+            metricValue = isUser ? (transactions.filter(t => t.type.includes("Deploy")).length) : (p.contracts || 0);
           } else if (activeLeaderboardTab === "tx") {
             metricValue = isUser ? Math.max(realTxCount, transactions.length) : (localProf.transactionsCount || 0);
           } else if (activeLeaderboardTab === "projects") {
@@ -213,10 +213,10 @@ export default function QuestsHub() {
             rank: 1,
             address: pAddr,
             name: isUser ? `${profileUsername || p.name} (You)` : p.name,
-            avatar: p.avatar,
-            title: p.title,
-            level: p.level,
-            xp: p.xp,
+            avatar: isUser ? (profileAvatar || p.avatar) : p.avatar,
+            title: isUser ? (profileTitle || p.title) : p.title,
+            level: isUser ? (level || p.level) : p.level,
+            xp: isUser ? (totalXp || p.xp) : p.xp,
             metricValue,
             isUser
           };
