@@ -138,7 +138,6 @@ interface QuestContextType {
   incrementWeeklyMission: (id: string) => void;
   trackSwapAction: (fromToken: string, toToken: string, amount: number) => void;
   unlockAchievement: (id: string) => void;
-  awardDeployXp: (templateId: string, xpAmount: number) => void;
 }
 
 const QuestContext = createContext<QuestContextType | undefined>(undefined);
@@ -240,8 +239,8 @@ const INITIAL_QUESTS: Quest[] = [
   {
     id: "deploy_token",
     title: "Deploy Token",
-    description: "Deploy a standard token contract to the KiiChain Testnet.",
-    xp: 30,
+    description: "Deploy a standard utility token contract to the KiiChain Testnet.",
+    xp: 100,
     completed: false,
     category: "deploy",
     actionLabel: "Deploy Template",
@@ -250,8 +249,18 @@ const INITIAL_QUESTS: Quest[] = [
   {
     id: "deploy_nft",
     title: "Deploy NFT",
-    description: "Deploy an NFT Collection contract using the templates tool.",
-    xp: 30,
+    description: "Deploy a collectible NFT collection contract to the KiiChain Testnet.",
+    xp: 100,
+    completed: false,
+    category: "deploy",
+    actionLabel: "Deploy Template",
+    actionUrl: "/deploy",
+  },
+  {
+    id: "deploy_swap_pool",
+    title: "Deploy KiiSwap Pool",
+    description: "Launch a custom liquidity pool smart contract on the KiiChain Testnet.",
+    xp: 300,
     completed: false,
     category: "deploy",
     actionLabel: "Deploy Template",
@@ -816,17 +825,6 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
-  // Award one-time deployment XP helper
-  const awardDeployXp = (templateId: string, xpAmount: number) => {
-    const addr = sanitizeAddress(displayAddress || "0x_demo_user");
-    const key = `kii_deploy_xp_awarded_${templateId}_${addr}`;
-    const alreadyAwarded = localStorage.getItem(key);
-    if (!alreadyAwarded) {
-      addXp(xpAmount);
-      localStorage.setItem(key, "true");
-    }
-  };
-
   // Generate Daily Pool
   const generateDailyChallenges = () => {
     const addr = sanitizeAddress(displayAddress || "0x_demo_user");
@@ -1059,6 +1057,10 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         unlockAchievement("nft_creator");
         incrementDailyChallenge("daily_complete_5");
       }
+      if (latestTx.type.includes("Deploy SimpleSwapPool")) {
+        completeQuest("deploy_swap_pool");
+        incrementDailyChallenge("daily_complete_5");
+      }
       if (latestTx.type.includes("Interaction") || latestTx.type.includes("Transfer")) {
         completeQuest("interact_contract");
         incrementDailyChallenge("daily_interact_2");
@@ -1075,6 +1077,9 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     if (todayTxs.some(t => t.type.includes("Deploy NFT"))) {
       completeQuest("deploy_nft");
+    }
+    if (todayTxs.some(t => t.type.includes("Deploy SimpleSwapPool"))) {
+      completeQuest("deploy_swap_pool");
     }
     if (todayTxs.some(t => t.type.includes("Interaction") || t.type.includes("Transfer"))) {
       completeQuest("interact_contract");
@@ -1838,7 +1843,6 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         incrementWeeklyMission,
         trackSwapAction,
         unlockAchievement,
-        awardDeployXp,
       }}
     >
       {children}

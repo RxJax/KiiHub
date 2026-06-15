@@ -136,6 +136,10 @@ export default function QuestsHub() {
         const count = todayTxs.filter(t => t.type.includes("Deploy NFT")).length;
         return { current: Math.min(1, count), target: 1 };
       }
+      case "deploy_swap_pool": {
+        const count = todayTxs.filter(t => t.type.includes("Deploy SimpleSwapPool")).length;
+        return { current: Math.min(1, count), target: 1 };
+      }
       case "interact_contract": {
         const count = todayTxs.filter(t => t.type.includes("Interaction") || t.type.includes("Transfer")).length;
         return { current: Math.min(1, count), target: 1 };

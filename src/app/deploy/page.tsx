@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useWallet } from "@/contexts/WalletContext";
-import { useQuests } from "@/contexts/QuestContext";
 import { 
   Code, 
   Settings, 
@@ -82,7 +81,6 @@ const TEMPLATES: ContractTemplate[] = [
 
 export default function Deploy() {
   const { isConnected, walletType, executeContractDeployment, displayAddress } = useWallet();
-  const { awardDeployXp } = useQuests();
   const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
   const [formParams, setFormParams] = useState<{ [key: string]: string }>({});
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
@@ -141,18 +139,10 @@ export default function Deploy() {
           txHash: `Token Deploy: ${tokenRes.txHash}\nNFT Deploy: ${nftRes.txHash}`
         });
 
-        // Award one-time deployment XP
-        awardDeployXp(selectedTemplate.id, 200);
+        // XP is awarded automatically via transactions hook in QuestContext
       } else {
         const res = await executeContractDeployment(selectedTemplate.id, formParams);
         setDeployResult(res);
-
-        // Award one-time deployment XP
-        if (res.success) {
-          let xpToAward = 100;
-          if (selectedTemplate.id === "swap-pool") xpToAward = 300;
-          awardDeployXp(selectedTemplate.id, xpToAward);
-        }
       }
     } catch (err: any) {
       setDeployResult({
