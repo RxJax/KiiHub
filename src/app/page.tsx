@@ -224,7 +224,7 @@ export default function Dashboard() {
 
     const fetchLeaderboard = async () => {
       try {
-        const res = await fetch("/api/leaderboard");
+        const res = await fetch("/api/leaderboard", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch leaderboard");
         const data = await res.json();
 
@@ -267,11 +267,12 @@ export default function Dashboard() {
           });
         }
 
-        // ALWAYS sort descending by XP, then level, then contracts after applying client overrides
+        // ALWAYS sort descending by XP, then level, then contracts, then name (alphabetical fallback) after applying client overrides
         profiles.sort((a: any, b: any) => {
           if (b.xp !== a.xp) return b.xp - a.xp;
           if (b.level !== a.level) return b.level - a.level;
-          return b.contracts - a.contracts;
+          if (b.contracts !== a.contracts) return b.contracts - a.contracts;
+          return (a.name || "").localeCompare(b.name || "");
         });
 
         // ALWAYS re-assign ranks based on final sorted order

@@ -58,7 +58,7 @@ export default function HallOfFame() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const res = await fetch("/api/leaderboard");
+        const res = await fetch("/api/leaderboard", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch leaderboard");
         const data = await res.json();
 
@@ -99,11 +99,12 @@ export default function HallOfFame() {
           });
         }
 
-        // ALWAYS sort descending by XP, then level, then contracts after applying client overrides
+        // ALWAYS sort descending by XP, then level, then contracts, then name (alphabetical fallback) after applying client overrides
         ranked.sort((a: any, b: any) => {
           if (b.xp !== a.xp) return b.xp - a.xp;
           if (b.level !== a.level) return b.level - a.level;
-          return b.contracts - a.contracts;
+          if (b.contracts !== a.contracts) return b.contracts - a.contracts;
+          return (a.name || "").localeCompare(b.name || "");
         });
 
         // ALWAYS re-assign ranks based on final sorted order
@@ -279,48 +280,56 @@ export default function HallOfFame() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-brand-border/40 font-mono">
-                {leaderboard.map((entry) => (
-                  <tr 
-                    key={entry.address || entry.name} 
-                    className={`hover:bg-white/[0.01] ${
-                      entry.isUser 
-                        ? "bg-kii-purple/5 border border-brand-border-purple/35 font-bold text-white" 
-                        : ""
-                    }`}
-                  >
-                    <td className="py-3.5">
-                      <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs ${
-                        entry.rank === 1 
-                          ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" 
-                          : entry.rank === 2
-                          ? "bg-slate-400/10 text-slate-300 border border-slate-400/20"
-                          : entry.rank === 3
-                          ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
-                          : "bg-white/[0.02] border border-white/[0.04] text-zinc-400"
-                      }`}>
-                        {entry.rank}
-                      </span>
-                    </td>
-                    <td className="py-3.5 text-zinc-300">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">{entry.avatar}</span>
-                        <div className="flex flex-col">
-                          <span className="font-sans text-white font-bold">{entry.name}</span>
+                {leaderboard.length > 0 ? (
+                  leaderboard.map((entry) => (
+                    <tr 
+                      key={entry.address || entry.name} 
+                      className={`hover:bg-white/[0.01] ${
+                        entry.isUser 
+                          ? "bg-kii-purple/5 border border-brand-border-purple/35 font-bold text-white" 
+                          : ""
+                      }`}
+                    >
+                      <td className="py-3.5">
+                        <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs ${
+                          entry.rank === 1 
+                            ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" 
+                            : entry.rank === 2
+                            ? "bg-slate-400/10 text-slate-300 border border-slate-400/20"
+                            : entry.rank === 3
+                            ? "bg-orange-500/10 text-orange-400 border border-orange-500/20"
+                            : "bg-white/[0.02] border border-white/[0.04] text-zinc-400"
+                        }`}>
+                          {entry.rank}
+                        </span>
+                      </td>
+                      <td className="py-3.5 text-zinc-300">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{entry.avatar}</span>
+                          <div className="flex flex-col">
+                            <span className="font-sans text-white font-bold">{entry.name}</span>
+                          </div>
+                          {entry.isUser && (
+                            <span className="text-[8px] font-bold text-kii-blue tracking-wide uppercase px-1 rounded bg-kii-blue/10 border border-kii-blue/20">
+                              YOU
+                            </span>
+                          )}
                         </div>
-                        {entry.isUser && (
-                          <span className="text-[8px] font-bold text-kii-blue tracking-wide uppercase px-1 rounded bg-kii-blue/10 border border-kii-blue/20">
-                            YOU
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3.5 text-zinc-400 font-sans">{entry.title}</td>
-                    <td className="py-3.5 text-zinc-400 font-sans">Lvl {entry.level}</td>
-                    <td className="py-3.5 text-right font-extrabold text-white text-sm">
-                      {entry.xp.toLocaleString()} XP
+                      </td>
+                      <td className="py-3.5 text-zinc-400 font-sans">{entry.title}</td>
+                      <td className="py-3.5 text-zinc-400 font-sans">Lvl {entry.level}</td>
+                      <td className="py-3.5 text-right font-extrabold text-white text-sm">
+                        {entry.xp.toLocaleString()} XP
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-zinc-500 font-sans">
+                      No entries yet. Connect your wallet to join the leaderboard!
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
