@@ -658,6 +658,10 @@ export default function QuestsHub() {
               <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
                 <TrendingUp className="w-4 h-4 text-kii-blue" />
                 Rankings Table
+                <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-0.5 rounded-full ml-1">
+                  <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-widest font-sans">Live</span>
+                </span>
               </h3>
               <span className="text-[10px] text-zinc-500 font-medium">Updates dynamically on every completed action</span>
             </div>
@@ -682,16 +686,22 @@ export default function QuestsHub() {
                       return (
                         <tr 
                           key={entry.address || entry.name} 
-                          className={`hover:bg-white/[0.01] transition-all duration-200 ${
+                          className={`hover:bg-white/[0.02] hover:scale-[1.003] active:scale-[0.999] transition-all duration-200 relative ${
                             isMe 
-                              ? "bg-kii-purple/10 border-y-2 border-kii-purple font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.35)]" 
+                              ? "font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.2)] z-10" 
                               : ""
                           }`}
                         >
-                          <td className="py-3.5">
-                            <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs ${
+                          <td className={`py-3.5 pl-3 transition-colors duration-200 ${
+                            isMe 
+                              ? "border-y-2 border-l-2 border-kii-purple rounded-l-lg bg-kii-purple/[0.08]" 
+                              : ""
+                          }`}>
+                            <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-transform duration-200 ${
+                              isMe ? "scale-110" : ""
+                            } ${
                               entry.rank === 1 
-                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" 
+                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.25)] animate-pulse" 
                                 : entry.rank === 2
                                 ? "bg-slate-400/10 text-slate-300 border border-slate-400/20"
                                 : entry.rank === 3
@@ -701,11 +711,20 @@ export default function QuestsHub() {
                               {entry.rank}
                             </span>
                           </td>
-                          <td className="py-3.5 text-zinc-300">
+                          <td className={`py-3.5 transition-colors duration-200 ${
+                            isMe 
+                              ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
+                              : ""
+                          }`}>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm">{entry.avatar}</span>
+                              <span className={`text-sm transition-transform duration-200 hover:rotate-12 ${isMe ? "scale-125" : ""}`}>{entry.avatar}</span>
                               <div className="flex flex-col">
-                                <span className="font-sans text-white font-bold">{displayName}</span>
+                                <span className="font-sans text-white font-bold flex items-center gap-1.5">
+                                  {displayName}
+                                  {isMe && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-kii-blue animate-ping" />
+                                  )}
+                                </span>
                               </div>
                               {isMe && (
                                 <span className="text-[8px] font-bold text-kii-blue tracking-wide uppercase px-1 rounded bg-kii-blue/10 border border-kii-blue/20">
@@ -714,17 +733,29 @@ export default function QuestsHub() {
                               )}
                             </div>
                           </td>
-                        <td className="py-3.5 text-zinc-400 font-sans">{entry.title}</td>
-                        <td className="py-3.5 text-zinc-400 font-sans">Lvl {entry.level}</td>
-                        <td className="py-3.5 text-right font-extrabold text-white text-sm">
-                          {entry.metricValue.toLocaleString()} {
-                            activeLeaderboardTab === "xp" ? "XP" :
-                            activeLeaderboardTab === "deploys" ? "Contracts" :
-                            activeLeaderboardTab === "tx" ? "Transactions" :
-                            activeLeaderboardTab === "projects" ? "Projects" : "Invites"
-                          }
-                        </td>
-                      </tr>
+                          <td className={`py-3.5 text-zinc-400 font-sans transition-colors duration-200 ${
+                            isMe 
+                              ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
+                              : ""
+                          }`}>{entry.title}</td>
+                          <td className={`py-3.5 text-zinc-400 font-sans transition-colors duration-200 ${
+                            isMe 
+                              ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
+                              : ""
+                          }`}>Lvl {entry.level}</td>
+                          <td className={`py-3.5 pr-3 text-right font-extrabold text-white text-sm transition-colors duration-200 ${
+                            isMe 
+                              ? "border-y-2 border-r-2 border-kii-purple rounded-r-lg bg-kii-purple/[0.08]" 
+                              : ""
+                          }`}>
+                            {entry.metricValue.toLocaleString()} {
+                              activeLeaderboardTab === "xp" ? "XP" :
+                              activeLeaderboardTab === "deploys" ? "Contracts" :
+                              activeLeaderboardTab === "tx" ? "Transactions" :
+                              activeLeaderboardTab === "projects" ? "Projects" : "Invites"
+                            }
+                          </td>
+                        </tr>
                       );
                     })
                   ) : (

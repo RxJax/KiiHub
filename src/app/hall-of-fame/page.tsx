@@ -204,10 +204,10 @@ export default function HallOfFame() {
           
           {/* Rank 2 - Silver podium */}
           {podiumSpots.second && (
-            <div className={`glass-panel p-5 rounded-xl border relative flex flex-col items-center justify-center text-center h-[210px] md:order-1 order-2 ${
-              podiumSpots.second.isUser ? "border-kii-purple/40 bg-kii-purple/5" : "border-brand-border"
+            <div className={`glass-panel p-5 rounded-xl border relative flex flex-col items-center justify-center text-center h-[210px] md:order-1 order-2 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-lg ${
+              podiumSpots.second.isUser ? "border-kii-purple/40 bg-kii-purple/5 shadow-[0_0_15px_rgba(168,85,247,0.15)]" : "border-brand-border"
             }`}>
-              <div className="absolute -top-6 w-12 h-12 rounded-full border border-slate-400/40 bg-zinc-950 flex items-center justify-center shadow-lg">
+              <div className="absolute -top-6 w-12 h-12 rounded-full border border-slate-400/40 bg-zinc-950 flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-110">
                 <span className="text-xl">{podiumSpots.second.avatar}</span>
               </div>
               <div className="text-[10px] font-bold text-slate-400 tracking-wider uppercase bg-slate-400/10 border border-slate-400/20 px-2 py-0.2 rounded-full mt-4">
@@ -223,11 +223,11 @@ export default function HallOfFame() {
 
           {/* Rank 1 - Gold podium */}
           {podiumSpots.first && (
-            <div className={`glass-panel p-6 rounded-xl border bg-gradient-to-tr from-amber-400/[0.03] to-transparent relative flex flex-col items-center justify-center text-center h-[250px] md:order-2 order-1 shadow-2xl relative ${
-              podiumSpots.first.isUser ? "border-amber-400/60 bg-amber-400/5" : "border-brand-border-purple/35"
+            <div className={`glass-panel p-6 rounded-xl border bg-gradient-to-tr from-amber-400/[0.03] to-transparent relative flex flex-col items-center justify-center text-center h-[250px] md:order-2 order-1 shadow-2xl relative transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 hover:shadow-amber-500/[0.05] ${
+              podiumSpots.first.isUser ? "border-amber-400/60 bg-amber-400/5 shadow-[0_0_20px_rgba(245,158,11,0.1)]" : "border-brand-border-purple/35"
             }`}>
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-t-xl" />
-              <div className="absolute -top-8 w-16 h-16 rounded-full border-2 border-amber-400 bg-zinc-950 flex items-center justify-center shadow-2xl">
+              <div className="absolute -top-8 w-16 h-16 rounded-full border-2 border-amber-400 bg-zinc-950 flex items-center justify-center shadow-2xl transition-transform duration-300 hover:scale-110">
                 <span className="text-2xl">{podiumSpots.first.avatar}</span>
               </div>
               <div className="text-[10px] font-extrabold text-amber-400 tracking-widest uppercase bg-amber-400/10 border border-amber-400/20 px-3 py-0.5 rounded-full mt-6 flex items-center gap-1">
@@ -243,10 +243,10 @@ export default function HallOfFame() {
 
           {/* Rank 3 - Bronze podium */}
           {podiumSpots.third && (
-            <div className={`glass-panel p-5 rounded-xl border relative flex flex-col items-center justify-center text-center h-[190px] md:order-3 order-3 ${
-              podiumSpots.third.isUser ? "border-kii-purple/40 bg-kii-purple/5" : "border-brand-border"
+            <div className={`glass-panel p-5 rounded-xl border relative flex flex-col items-center justify-center text-center h-[190px] md:order-3 order-3 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-md ${
+              podiumSpots.third.isUser ? "border-kii-purple/40 bg-kii-purple/5 shadow-[0_0_15px_rgba(168,85,247,0.15)]" : "border-brand-border"
             }`}>
-              <div className="absolute -top-6 w-12 h-12 rounded-full border border-orange-500/40 bg-zinc-950 flex items-center justify-center shadow-lg">
+              <div className="absolute -top-6 w-12 h-12 rounded-full border border-orange-500/40 bg-zinc-950 flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-110">
                 <span className="text-xl">{podiumSpots.third.avatar}</span>
               </div>
               <div className="text-[10px] font-bold text-orange-400 tracking-wider uppercase bg-orange-500/10 border border-orange-500/20 px-2 py-0.2 rounded-full mt-4">
@@ -267,6 +267,10 @@ export default function HallOfFame() {
             <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-1.5">
               <TrendingUp className="w-4 h-4 text-kii-blue" />
               Ranks & Metrics Table
+              <span className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-0.5 rounded-full ml-1">
+                <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping" />
+                <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-widest font-sans">Live</span>
+              </span>
             </h3>
             <span className="text-[10px] text-zinc-500 font-medium">Updates dynamically based on your active quests & games</span>
           </div>
@@ -291,16 +295,22 @@ export default function HallOfFame() {
                     return (
                       <tr 
                         key={entry.address || entry.name} 
-                        className={`hover:bg-white/[0.01] transition-all duration-200 ${
+                        className={`hover:bg-white/[0.02] hover:scale-[1.003] active:scale-[0.999] transition-all duration-200 relative ${
                           isMe 
-                            ? "bg-kii-purple/10 border-y-2 border-kii-purple font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.35)]" 
+                            ? "font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.2)] z-10" 
                             : ""
                         }`}
                       >
-                        <td className="py-3.5">
-                          <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs ${
+                        <td className={`py-3.5 pl-3 transition-colors duration-200 ${
+                          isMe 
+                            ? "border-y-2 border-l-2 border-kii-purple rounded-l-lg bg-kii-purple/[0.08]" 
+                            : ""
+                        }`}>
+                          <span className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-transform duration-200 ${
+                            isMe ? "scale-110" : ""
+                          } ${
                             entry.rank === 1 
-                              ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" 
+                              ? "bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.25)] animate-pulse" 
                               : entry.rank === 2
                               ? "bg-slate-400/10 text-slate-300 border border-slate-400/20"
                               : entry.rank === 3
@@ -310,11 +320,20 @@ export default function HallOfFame() {
                             {entry.rank}
                           </span>
                         </td>
-                        <td className="py-3.5 text-zinc-300">
+                        <td className={`py-3.5 transition-colors duration-200 ${
+                          isMe 
+                            ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
+                            : ""
+                        }`}>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm">{entry.avatar}</span>
+                            <span className={`text-sm transition-transform duration-200 hover:rotate-12 ${isMe ? "scale-125" : ""}`}>{entry.avatar}</span>
                             <div className="flex flex-col">
-                              <span className="font-sans text-white font-bold">{displayName}</span>
+                              <span className="font-sans text-white font-bold flex items-center gap-1.5">
+                                {displayName}
+                                {isMe && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-kii-blue animate-ping" />
+                                )}
+                              </span>
                             </div>
                             {isMe && (
                               <span className="text-[8px] font-bold text-kii-blue tracking-wide uppercase px-1 rounded bg-kii-blue/10 border border-kii-blue/20">
@@ -323,9 +342,21 @@ export default function HallOfFame() {
                             )}
                           </div>
                         </td>
-                        <td className="py-3.5 text-zinc-400 font-sans">{entry.title}</td>
-                        <td className="py-3.5 text-zinc-400 font-sans">Lvl {entry.level}</td>
-                        <td className="py-3.5 text-right font-extrabold text-white text-sm">
+                        <td className={`py-3.5 text-zinc-400 font-sans transition-colors duration-200 ${
+                          isMe 
+                            ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
+                            : ""
+                        }`}>{entry.title}</td>
+                        <td className={`py-3.5 text-zinc-400 font-sans transition-colors duration-200 ${
+                          isMe 
+                            ? "border-y-2 border-kii-purple bg-kii-purple/[0.08]" 
+                            : ""
+                        }`}>Lvl {entry.level}</td>
+                        <td className={`py-3.5 pr-3 text-right font-extrabold text-white text-sm transition-colors duration-200 ${
+                          isMe 
+                            ? "border-y-2 border-r-2 border-kii-purple rounded-r-lg bg-kii-purple/[0.08]" 
+                            : ""
+                        }`}>
                           {entry.xp.toLocaleString()} XP
                         </td>
                       </tr>
