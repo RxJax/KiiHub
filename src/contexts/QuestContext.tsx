@@ -493,6 +493,37 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setQuestsHydrated(false);
     setHydratedAddress(null);
 
+    // One-time leaderboard season reset to 0 XP for everyone (Season 4 Reset)
+    const resetKey = `kii_season_reset_v4_${addr}`;
+    if (!localStorage.getItem(resetKey)) {
+      const keysToReset = [
+        `kii_quests_v2_${addr}`,
+        `kii_achievements_v2_${addr}`,
+        `kii_daily_v2_${addr}`,
+        `kii_weekly_v2_${addr}`,
+        `kii_projects_v2_${addr}`,
+        `kii_referrals_v2_${addr}`,
+        `kii_profile_title_${addr}`,
+        `kii_total_xp_v2_${addr}`,
+        `kii_community_v2_${addr}`,
+        `kii_swap_count_${addr}`,
+        `kii_swap_volume_${addr}`,
+        `kii_stable_conversions_${addr}`,
+        `kii_gamer_badge_won_${addr}`
+      ];
+      keysToReset.forEach(k => localStorage.removeItem(k));
+      localStorage.setItem(resetKey, "true");
+      
+      localStorage.removeItem("kii_quests_v2");
+      localStorage.removeItem("kii_achievements_v2");
+      localStorage.removeItem("kii_daily_v2");
+      localStorage.removeItem("kii_weekly_v2");
+      localStorage.removeItem("kii_projects_v2");
+      localStorage.removeItem("kii_referrals_v2");
+      localStorage.removeItem("kii_total_xp_v2");
+      localStorage.removeItem("kii_community_v2");
+    }
+
     // Migrate demo user data to target address if target address has no XP
     const targetXpKey = `kii_total_xp_v2_${addr}`;
     const hasTargetXp = localStorage.getItem(targetXpKey);
