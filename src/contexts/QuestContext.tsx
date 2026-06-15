@@ -833,10 +833,90 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Add XP helper
   const addXp = (amount: number) => {
     const addr = sanitizeAddress(displayAddress || "0x_demo_user");
+    
+    // Check if we need to generate a default username
+    let currentUsername = localStorage.getItem(`kii_profile_username_${addr}`) || profileUsername;
+    let currentAvatar = localStorage.getItem(`kii_profile_avatar_${addr}`) || profileAvatar;
+    let currentTitle = localStorage.getItem(`kii_profile_title_${addr}`) || profileTitle;
+    
+    if (displayAddress && (!currentUsername || currentUsername === "Not Connected" || currentUsername === "Guest" || currentUsername === displayAddress)) {
+      const randNum = String(Math.floor(Math.random() * 99) + 1).padStart(2, "0");
+      const defaultUsername = `user${randNum}`;
+      currentUsername = defaultUsername;
+      currentAvatar = "🚀";
+      currentTitle = "Newcomer";
+      
+      setProfileUsername(defaultUsername);
+      setProfileAvatar("🚀");
+      setProfileTitle("Newcomer");
+      
+      localStorage.setItem(`kii_profile_username_${addr}`, defaultUsername);
+      localStorage.setItem(`kii_profile_avatar_${addr}`, "🚀");
+      localStorage.setItem(`kii_profile_title_${addr}`, "Newcomer");
+    }
+
     setTotalXp((prev) => {
       const newXp = prev + amount;
       localStorage.setItem(`kii_total_xp_v2_${addr}`, String(newXp));
       triggerXpConfetti(amount);
+      
+      if (displayAddress && addr !== "0x_demo_user") {
+        const levelInfo = getLevelInfo(newXp);
+        const contractDeploys = transactions.filter(t => t.type.includes("Deploy")).length;
+        const swapCount = Number(localStorage.getItem(`kii_swap_count_${addr}`) || "0");
+        const swapVolume = Number(localStorage.getItem(`kii_swap_volume_${addr}`) || "0");
+        const stablecoinConversions = Number(localStorage.getItem(`kii_stable_conversions_${addr}`) || "0");
+        
+        // Update registry in localStorage
+        const registryStr = localStorage.getItem("kii_leaderboard_profiles_v2");
+        let registry: Record<string, any> = {};
+        if (registryStr) {
+          try {
+            registry = JSON.parse(registryStr);
+          } catch (e) {}
+        }
+        
+        // Clean registry
+        const cleanedRegistry: Record<string, any> = {};
+        Object.keys(registry).forEach(key => {
+          const cleanKey = sanitizeAddress(key);
+          const isValidEvm = /^0x[a-f0-9]{40}$/.test(cleanKey);
+          const isValidCosmos = /^kii1[a-z0-9]{38,45}$/.test(cleanKey);
+          if (isValidEvm || isValidCosmos) {
+            cleanedRegistry[cleanKey] = {
+              ...registry[key],
+              address: cleanKey
+            };
+          }
+        });
+        registry = cleanedRegistry;
+        
+        delete registry["0x_demo_user"];
+        delete registry["null"];
+        delete registry["undefined"];
+        
+        registry[addr] = {
+          address: addr,
+          name: currentUsername,
+          avatar: currentAvatar,
+          title: currentTitle,
+          level: levelInfo.level,
+          xp: newXp,
+          contracts: contractDeploys,
+          transactionsCount: Math.max(realTxCount, transactions.length),
+          projectsCount: projects.length,
+          referralsCount: referredUsers.length,
+          swapsCount: swapCount,
+          swapVolume: swapVolume,
+          stablecoinConversions: stablecoinConversions,
+          questsCount: quests.filter(q => q.completed).length,
+          lastUpdated: Date.now()
+        };
+        localStorage.setItem("kii_leaderboard_profiles_v2", JSON.stringify(registry));
+
+        syncProfileToDb(addr, currentUsername, currentAvatar, currentTitle, levelInfo.level, newXp, contractDeploys);
+      }
+      
       return newXp;
     });
   };
@@ -1421,7 +1501,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem(`kii_profile_title_${addr}`, title);
     localStorage.setItem(`kii_profile_avatar_${addr}`, avatar);
     
-    addXp(5); // Reward minor configuration XP
+    addXp(5); // Reward minor configuration XP and trigger instant database sync with updated profile values
   };
 
   // Project submissions methods
