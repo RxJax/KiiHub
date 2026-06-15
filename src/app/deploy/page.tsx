@@ -82,7 +82,7 @@ const TEMPLATES: ContractTemplate[] = [
 
 export default function Deploy() {
   const { isConnected, walletType, executeContractDeployment, displayAddress } = useWallet();
-  const { addXp } = useQuests();
+  const { awardDeployXp } = useQuests();
   const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
   const [formParams, setFormParams] = useState<{ [key: string]: string }>({});
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
@@ -142,30 +142,16 @@ export default function Deploy() {
         });
 
         // Award one-time deployment XP
-        if (displayAddress) {
-          const userAddr = displayAddress.toLowerCase();
-          const xpKey = `kii_deploy_xp_awarded_${selectedTemplate.id}_${userAddr}`;
-          const alreadyAwarded = localStorage.getItem(xpKey);
-          if (!alreadyAwarded) {
-            addXp(200);
-            localStorage.setItem(xpKey, "true");
-          }
-        }
+        awardDeployXp(selectedTemplate.id, 200);
       } else {
         const res = await executeContractDeployment(selectedTemplate.id, formParams);
         setDeployResult(res);
 
         // Award one-time deployment XP
-        if (res.success && displayAddress) {
-          const userAddr = displayAddress.toLowerCase();
-          const xpKey = `kii_deploy_xp_awarded_${selectedTemplate.id}_${userAddr}`;
-          const alreadyAwarded = localStorage.getItem(xpKey);
-          if (!alreadyAwarded) {
-            let xpToAward = 100;
-            if (selectedTemplate.id === "swap-pool") xpToAward = 300;
-            addXp(xpToAward);
-            localStorage.setItem(xpKey, "true");
-          }
+        if (res.success) {
+          let xpToAward = 100;
+          if (selectedTemplate.id === "swap-pool") xpToAward = 300;
+          awardDeployXp(selectedTemplate.id, xpToAward);
         }
       }
     } catch (err: any) {

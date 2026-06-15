@@ -138,6 +138,7 @@ interface QuestContextType {
   incrementWeeklyMission: (id: string) => void;
   trackSwapAction: (fromToken: string, toToken: string, amount: number) => void;
   unlockAchievement: (id: string) => void;
+  awardDeployXp: (templateId: string, xpAmount: number) => void;
 }
 
 const QuestContext = createContext<QuestContextType | undefined>(undefined);
@@ -813,6 +814,17 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       return copy;
     });
+  };
+
+  // Award one-time deployment XP helper
+  const awardDeployXp = (templateId: string, xpAmount: number) => {
+    const addr = sanitizeAddress(displayAddress || "0x_demo_user");
+    const key = `kii_deploy_xp_awarded_${templateId}_${addr}`;
+    const alreadyAwarded = localStorage.getItem(key);
+    if (!alreadyAwarded) {
+      addXp(xpAmount);
+      localStorage.setItem(key, "true");
+    }
   };
 
   // Generate Daily Pool
@@ -1826,6 +1838,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         incrementWeeklyMission,
         trackSwapAction,
         unlockAchievement,
+        awardDeployXp,
       }}
     >
       {children}
