@@ -61,6 +61,7 @@ export default function HallOfFame() {
         const res = await fetch("/api/leaderboard", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch leaderboard");
         const data = await res.json();
+        console.log("Raw API Payload:", data);
 
         // Assign ranks and isUser flag
         let ranked = data.map((entry: any, index: number) => {

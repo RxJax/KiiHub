@@ -184,6 +184,7 @@ export default function QuestsHub() {
         const res = await fetch("/api/leaderboard", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch leaderboard");
         const data = await res.json();
+        console.log("Raw API Payload:", data);
 
         // Read local storage registry to merge extra stats if available
         const registryStr = typeof window !== "undefined" ? localStorage.getItem("kii_leaderboard_profiles_v2") : null;
