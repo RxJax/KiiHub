@@ -153,11 +153,11 @@ export const useQuests = () => {
 // RPG Builder Ranks
 const RANKS: BuilderRank[] = [
   { level: 1, title: "Newcomer", xpRequired: 0, badge: "🥉" },
-  { level: 2, title: "Explorer", xpRequired: 300, badge: "🧭" },
-  { level: 3, title: "Builder", xpRequired: 800, badge: "🛠️" },
-  { level: 4, title: "Developer", xpRequired: 1500, badge: "💻" },
-  { level: 5, title: "Architect", xpRequired: 2500, badge: "🏛️" },
-  { level: 6, title: "Kii Master", xpRequired: 4000, badge: "👑" },
+  { level: 2, title: "Explorer", xpRequired: 1000, badge: "🧭" },
+  { level: 3, title: "Builder", xpRequired: 2500, badge: "🛠️" },
+  { level: 4, title: "Developer", xpRequired: 5000, badge: "💻" },
+  { level: 5, title: "Architect", xpRequired: 10000, badge: "🏛️" },
+  { level: 6, title: "Kii Master", xpRequired: 20000, badge: "👑" },
 ];
 
 const getDeterministicProfile = (address: string) => {
