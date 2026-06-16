@@ -467,6 +467,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
   
   // Hydrate states from localStorage when active address changes
+  // Hydrate states from localStorage and database when active address changes
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -493,233 +494,268 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setQuestsHydrated(false);
     setHydratedAddress(null);
 
-    // One-time leaderboard season reset to 0 XP for everyone (Season 4 Reset)
-    const resetKey = `kii_season_reset_v4_${addr}`;
-    if (!localStorage.getItem(resetKey)) {
-      const keysToReset = [
-        `kii_quests_v2_${addr}`,
-        `kii_achievements_v2_${addr}`,
-        `kii_daily_v2_${addr}`,
-        `kii_weekly_v2_${addr}`,
-        `kii_projects_v2_${addr}`,
-        `kii_referrals_v2_${addr}`,
-        `kii_profile_title_${addr}`,
-        `kii_total_xp_v2_${addr}`,
-        `kii_community_v2_${addr}`,
-        `kii_swap_count_${addr}`,
-        `kii_swap_volume_${addr}`,
-        `kii_stable_conversions_${addr}`,
-        `kii_gamer_badge_won_${addr}`
-      ];
-      keysToReset.forEach(k => localStorage.removeItem(k));
-      localStorage.setItem(resetKey, "true");
-      
-      localStorage.removeItem("kii_quests_v2");
-      localStorage.removeItem("kii_achievements_v2");
-      localStorage.removeItem("kii_daily_v2");
-      localStorage.removeItem("kii_weekly_v2");
-      localStorage.removeItem("kii_projects_v2");
-      localStorage.removeItem("kii_referrals_v2");
-      localStorage.removeItem("kii_total_xp_v2");
-      localStorage.removeItem("kii_community_v2");
-    }
-
-    // Migrate demo user data to target address if target address has no XP
-    const targetXpKey = `kii_total_xp_v2_${addr}`;
-    const hasTargetXp = localStorage.getItem(targetXpKey);
-    const demoXpVal = localStorage.getItem("kii_total_xp_v2_0x_demo_user");
-    const demoXp = demoXpVal ? Number(demoXpVal) : 0;
-    
-    if (!hasTargetXp && demoXp > 0) {
-      const demoKeys = [
-        "kii_quests_v2",
-        "kii_achievements_v2",
-        "kii_daily_v2",
-        "kii_weekly_v2",
-        "kii_projects_v2",
-        "kii_referrals_v2",
-        "kii_profile_username",
-        "kii_profile_title",
-        "kii_profile_avatar",
-        "kii_total_xp_v2",
-        "kii_community_v2",
-        "kii_swap_count",
-        "kii_swap_volume",
-        "kii_stable_conversions"
-      ];
-      
-      demoKeys.forEach((keyPrefix) => {
-        const demoVal = localStorage.getItem(`${keyPrefix}_0x_demo_user`);
-        if (demoVal !== null) {
-          localStorage.setItem(`${keyPrefix}_${addr}`, demoVal);
-        }
-      });
-    }
-
-    const cachedQuests = getLocalStorageItemWithMigration("kii_quests_v2", displayAddress);
-    const cachedAchievements = getLocalStorageItemWithMigration("kii_achievements_v2", displayAddress);
-    const cachedDaily = getLocalStorageItemWithMigration("kii_daily_v2", displayAddress);
-    const cachedWeekly = getLocalStorageItemWithMigration("kii_weekly_v2", displayAddress);
-    const cachedProjects = getLocalStorageItemWithMigration("kii_projects_v2", displayAddress);
-    const cachedReferrals = getLocalStorageItemWithMigration("kii_referrals_v2", displayAddress);
-    const cachedUsername = getLocalStorageItemWithMigration("kii_profile_username", displayAddress);
-    const cachedTitle = getLocalStorageItemWithMigration("kii_profile_title", displayAddress);
-    const cachedAvatar = getLocalStorageItemWithMigration("kii_profile_avatar", displayAddress);
-    const cachedXp = getLocalStorageItemWithMigration("kii_total_xp_v2", displayAddress);
-    const cachedCommunity = getLocalStorageItemWithMigration("kii_community_v2", displayAddress);
-
-    // Compute activity status
-    const xpVal = cachedXp ? Number(cachedXp) : 0;
-    const hasTxsVal = localStorage.getItem(`kii_transactions_${addr}`);
-    let hasTxs = false;
-    if (hasTxsVal) {
-      try {
-        hasTxs = JSON.parse(hasTxsVal).length > 0;
-      } catch (e) {}
-    }
-    const hasActivity = xpVal > 0 || hasTxs;
-
-    if (cachedQuests) {
-      try {
-        const parsedQuests = JSON.parse(cachedQuests) as Quest[];
-        const now = Date.now();
-        let changed = false;
+    const runHydration = async () => {
+      // 1. One-time leaderboard season reset to 0 XP for everyone (Season 4 Reset)
+      const resetKey = `kii_season_reset_v4_${addr}`;
+      if (!localStorage.getItem(resetKey)) {
+        const keysToReset = [
+          `kii_quests_v2_${addr}`,
+          `kii_achievements_v2_${addr}`,
+          `kii_daily_v2_${addr}`,
+          `kii_weekly_v2_${addr}`,
+          `kii_projects_v2_${addr}`,
+          `kii_referrals_v2_${addr}`,
+          `kii_profile_title_${addr}`,
+          `kii_total_xp_v2_${addr}`,
+          `kii_community_v2_${addr}`,
+          `kii_swap_count_${addr}`,
+          `kii_swap_volume_${addr}`,
+          `kii_stable_conversions_${addr}`,
+          `kii_gamer_badge_won_${addr}`
+        ];
+        keysToReset.forEach(k => localStorage.removeItem(k));
+        localStorage.setItem(resetKey, "true");
         
-        const mergedQuests = INITIAL_QUESTS.map((initial) => {
-          const cached = parsedQuests.find((q) => q.id === initial.id);
-          if (cached) {
-            let completed = cached.completed;
-            let completedAt = cached.completedAt;
-            
-            if (completed && completedAt) {
-              const completedDate = new Date(completedAt);
-              const currentDate = new Date(now);
-              
-              const isDifferentDay = currentDate.getUTCFullYear() !== completedDate.getUTCFullYear() ||
-                currentDate.getUTCMonth() !== completedDate.getUTCMonth() ||
-                currentDate.getUTCDate() !== completedDate.getUTCDate();
-                
-              if (isDifferentDay && initial.category !== "deploy") {
-                changed = true;
-                completed = false;
-                completedAt = undefined;
-              }
-            }
-            return {
-              ...initial,
-              completed,
-              completedAt
-            };
+        localStorage.removeItem("kii_quests_v2");
+        localStorage.removeItem("kii_achievements_v2");
+        localStorage.removeItem("kii_daily_v2");
+        localStorage.removeItem("kii_weekly_v2");
+        localStorage.removeItem("kii_projects_v2");
+        localStorage.removeItem("kii_referrals_v2");
+        localStorage.removeItem("kii_total_xp_v2");
+        localStorage.removeItem("kii_community_v2");
+      }
+
+      // Migrate demo user data to target address if target address has no XP
+      const targetXpKey = `kii_total_xp_v2_${addr}`;
+      const hasTargetXp = localStorage.getItem(targetXpKey);
+      const demoXpVal = localStorage.getItem("kii_total_xp_v2_0x_demo_user");
+      const demoXp = demoXpVal ? Number(demoXpVal) : 0;
+      
+      if (!hasTargetXp && demoXp > 0) {
+        const demoKeys = [
+          "kii_quests_v2",
+          "kii_achievements_v2",
+          "kii_daily_v2",
+          "kii_weekly_v2",
+          "kii_projects_v2",
+          "kii_referrals_v2",
+          "kii_profile_username",
+          "kii_profile_title",
+          "kii_profile_avatar",
+          "kii_total_xp_v2",
+          "kii_community_v2",
+          "kii_swap_count",
+          "kii_swap_volume",
+          "kii_stable_conversions"
+        ];
+        
+        demoKeys.forEach((keyPrefix) => {
+          const demoVal = localStorage.getItem(`${keyPrefix}_0x_demo_user`);
+          if (demoVal !== null) {
+            localStorage.setItem(`${keyPrefix}_${addr}`, demoVal);
           }
-          changed = true;
-          return initial;
         });
-        
-        setQuests(mergedQuests);
-        if (changed) {
-          saveState("kii_quests_v2", mergedQuests);
+      }
+
+      // 2. Query database for user profile details (acts as remote source of truth)
+      let dbName = null;
+      let dbAvatar = null;
+      let dbTitle = null;
+      let dbXp = null;
+
+      try {
+        const res = await fetch("/api/leaderboard");
+        if (res.ok) {
+          const leaderboard = await res.json();
+          const myRow = leaderboard.find((item: any) => sanitizeAddress(item.address) === addr);
+          if (myRow) {
+            dbName = myRow.name;
+            dbAvatar = myRow.avatar;
+            dbTitle = myRow.title;
+            dbXp = myRow.xp;
+          }
         }
       } catch (e) {
+        console.error("Failed to fetch user profile from global db during hydration:", e);
+      }
+
+      // 3. Load from localStorage, fallback to database or default values
+      const cachedQuests = getLocalStorageItemWithMigration("kii_quests_v2", displayAddress);
+      const cachedAchievements = getLocalStorageItemWithMigration("kii_achievements_v2", displayAddress);
+      const cachedDaily = getLocalStorageItemWithMigration("kii_daily_v2", displayAddress);
+      const cachedWeekly = getLocalStorageItemWithMigration("kii_weekly_v2", displayAddress);
+      const cachedProjects = getLocalStorageItemWithMigration("kii_projects_v2", displayAddress);
+      const cachedReferrals = getLocalStorageItemWithMigration("kii_referrals_v2", displayAddress);
+      
+      const cachedUsername = dbName || getLocalStorageItemWithMigration("kii_profile_username", displayAddress);
+      const cachedTitle = dbTitle || getLocalStorageItemWithMigration("kii_profile_title", displayAddress);
+      const cachedAvatar = dbAvatar || getLocalStorageItemWithMigration("kii_profile_avatar", displayAddress);
+      const cachedXp = dbXp !== null ? String(dbXp) : getLocalStorageItemWithMigration("kii_total_xp_v2", displayAddress);
+      
+      // Save database values to localStorage so they persist locally
+      if (dbName) localStorage.setItem(`kii_profile_username_${addr}`, dbName);
+      if (dbTitle) localStorage.setItem(`kii_profile_title_${addr}`, dbTitle);
+      if (dbAvatar) localStorage.setItem(`kii_profile_avatar_${addr}`, dbAvatar);
+      if (dbXp !== null) localStorage.setItem(`kii_total_xp_v2_${addr}`, String(dbXp));
+
+      const cachedCommunity = getLocalStorageItemWithMigration("kii_community_v2", displayAddress);
+
+      // Compute activity status
+      const xpVal = cachedXp ? Number(cachedXp) : 0;
+      const hasTxsVal = localStorage.getItem(`kii_transactions_${addr}`);
+      let hasTxs = false;
+      if (hasTxsVal) {
+        try {
+          hasTxs = JSON.parse(hasTxsVal).length > 0;
+        } catch (e) {}
+      }
+      const hasActivity = xpVal > 0 || hasTxs;
+
+      if (cachedQuests) {
+        try {
+          const parsedQuests = JSON.parse(cachedQuests) as Quest[];
+          const now = Date.now();
+          let changed = false;
+          
+          const mergedQuests = INITIAL_QUESTS.map((initial) => {
+            const cached = parsedQuests.find((q) => q.id === initial.id);
+            if (cached) {
+              let completed = cached.completed;
+              let completedAt = cached.completedAt;
+              
+              if (completed && completedAt) {
+                const completedDate = new Date(completedAt);
+                const currentDate = new Date(now);
+                
+                const isDifferentDay = currentDate.getUTCFullYear() !== completedDate.getUTCFullYear() ||
+                  currentDate.getUTCMonth() !== completedDate.getUTCMonth() ||
+                  currentDate.getUTCDate() !== completedDate.getUTCDate();
+                  
+                if (isDifferentDay && initial.category !== "deploy") {
+                  changed = true;
+                  completed = false;
+                  completedAt = undefined;
+                }
+              }
+              return {
+                ...initial,
+                completed,
+                completedAt
+              };
+            }
+            changed = true;
+            return initial;
+          });
+          
+          setQuests(mergedQuests);
+          if (changed) {
+            saveState("kii_quests_v2", mergedQuests);
+          }
+        } catch (e) {
+          setQuests(INITIAL_QUESTS);
+        }
+      } else {
         setQuests(INITIAL_QUESTS);
       }
-    } else {
-      setQuests(INITIAL_QUESTS);
-    }
 
-    if (cachedAchievements) {
-      try {
-        const parsedAchievements = JSON.parse(cachedAchievements) as Achievement[];
-        let changed = false;
-        
-        const mergedAchievements = INITIAL_ACHIEVEMENTS.map((initial) => {
-          const cached = parsedAchievements.find((a) => a.id === initial.id);
-          if (cached) {
-            return {
-              ...initial,
-              unlocked: cached.unlocked,
-              unlockedAt: cached.unlockedAt
-            };
+      if (cachedAchievements) {
+        try {
+          const parsedAchievements = JSON.parse(cachedAchievements) as Achievement[];
+          let changed = false;
+          
+          const mergedAchievements = INITIAL_ACHIEVEMENTS.map((initial) => {
+            const cached = parsedAchievements.find((a) => a.id === initial.id);
+            if (cached) {
+              return {
+                ...initial,
+                unlocked: cached.unlocked,
+                unlockedAt: cached.unlockedAt
+              };
+            }
+            changed = true;
+            return initial;
+          });
+          
+          setAchievements(mergedAchievements);
+          if (changed) {
+            saveState("kii_achievements_v2", mergedAchievements);
           }
-          changed = true;
-          return initial;
-        });
-        
-        setAchievements(mergedAchievements);
-        if (changed) {
-          saveState("kii_achievements_v2", mergedAchievements);
+        } catch (e) {
+          setAchievements(INITIAL_ACHIEVEMENTS);
         }
-      } catch (e) {
+      } else {
         setAchievements(INITIAL_ACHIEVEMENTS);
       }
-    } else {
-      setAchievements(INITIAL_ACHIEVEMENTS);
-    }
 
-    if (cachedWeekly) setWeeklyMissions(JSON.parse(cachedWeekly));
-    else setWeeklyMissions(INITIAL_WEEKLY_MISSIONS);
+      if (cachedWeekly) setWeeklyMissions(JSON.parse(cachedWeekly));
+      else setWeeklyMissions(INITIAL_WEEKLY_MISSIONS);
 
-    if (cachedProjects) setProjects(JSON.parse(cachedProjects));
-    else setProjects([]);
+      if (cachedProjects) setProjects(JSON.parse(cachedProjects));
+      else setProjects([]);
 
-    if (cachedReferrals) setReferredUsers(JSON.parse(cachedReferrals));
-    else setReferredUsers([]);
+      if (cachedReferrals) setReferredUsers(JSON.parse(cachedReferrals));
+      else setReferredUsers([]);
 
-    if (cachedUsername) {
-      setProfileUsername(cachedUsername);
-      if (cachedTitle) setProfileTitle(cachedTitle);
-      else setProfileTitle("Newcomer");
-      if (cachedAvatar) setProfileAvatar(cachedAvatar);
-      else setProfileAvatar("🚀");
-    } else if (hasActivity) {
-      // Create default profile on connection only if they have activity
-      const randNum = String(Math.floor(Math.random() * 99) + 1).padStart(2, "0");
-      const defaultUsername = `user${randNum}`;
-      setProfileUsername(defaultUsername);
-      setProfileTitle("Newcomer");
-      setProfileAvatar("🚀");
-      localStorage.setItem(`kii_profile_username_${addr}`, defaultUsername);
-      localStorage.setItem(`kii_profile_title_${addr}`, "Newcomer");
-      localStorage.setItem(`kii_profile_avatar_${addr}`, "🚀");
-    } else {
-      // Connected but no activity yet - show wallet address as nickname, title as Guest
-      setProfileUsername(displayAddress);
-      setProfileTitle("Guest");
-      setProfileAvatar("🔒");
-    }
-
-    setTotalXp(xpVal);
-
-    if (cachedCommunity) setCommunityGoals(JSON.parse(cachedCommunity));
-    else setCommunityGoals(INITIAL_COMMUNITY_GOALS);
-
-    // Handle Daily Generation
-    if (cachedDaily) {
-      const generatedAtKey = `kii_daily_generated_at_${addr}`;
-      const genTimeStr = localStorage.getItem(generatedAtKey);
-      const genTime = genTimeStr ? Number(genTimeStr) : 0;
-      
-      const now = new Date();
-      const genDate = new Date(genTime);
-      
-      const isDifferentDay = !genTime || 
-        now.getUTCFullYear() !== genDate.getUTCFullYear() ||
-        now.getUTCMonth() !== genDate.getUTCMonth() ||
-        now.getUTCDate() !== genDate.getUTCDate();
-        
-      if (isDifferentDay) {
-        generateDailyChallenges();
+      if (cachedUsername) {
+        setProfileUsername(cachedUsername);
+        if (cachedTitle) setProfileTitle(cachedTitle);
+        else setProfileTitle("Newcomer");
+        if (cachedAvatar) setProfileAvatar(cachedAvatar);
+        else setProfileAvatar("🚀");
+      } else if (hasActivity) {
+        // Create default profile on connection only if they have activity
+        const randNum = String(Math.floor(Math.random() * 99) + 1).padStart(2, "0");
+        const defaultUsername = `user${randNum}`;
+        setProfileUsername(defaultUsername);
+        setProfileTitle("Newcomer");
+        setProfileAvatar("🚀");
+        localStorage.setItem(`kii_profile_username_${addr}`, defaultUsername);
+        localStorage.setItem(`kii_profile_title_${addr}`, "Newcomer");
+        localStorage.setItem(`kii_profile_avatar_${addr}`, "🚀");
       } else {
-        setDailyChallenges(JSON.parse(cachedDaily));
+        // Connected but no activity yet - show wallet address as nickname, title as Guest
+        setProfileUsername(displayAddress);
+        setProfileTitle("Guest");
+        setProfileAvatar("🔒");
       }
-    } else {
-      generateDailyChallenges();
-    }
-    
-    // Generate referral code
-    const generatedRef = "KII-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-    setReferralCode(generatedRef);
-    setQuestsHydrated(true);
-    setHydratedAddress(addr);
+
+      setTotalXp(xpVal);
+
+      if (cachedCommunity) setCommunityGoals(JSON.parse(cachedCommunity));
+      else setCommunityGoals(INITIAL_COMMUNITY_GOALS);
+
+      // Handle Daily Generation
+      if (cachedDaily) {
+        const generatedAtKey = `kii_daily_generated_at_${addr}`;
+        const genTimeStr = localStorage.getItem(generatedAtKey);
+        const genTime = genTimeStr ? Number(genTimeStr) : 0;
+        
+        const now = new Date();
+        const genDate = new Date(genTime);
+        
+        const isDifferentDay = !genTime || 
+          now.getUTCFullYear() !== genDate.getUTCFullYear() ||
+          now.getUTCMonth() !== genDate.getUTCMonth() ||
+          now.getUTCDate() !== genDate.getUTCDate();
+          
+        if (isDifferentDay) {
+          generateDailyChallenges();
+        } else {
+          setDailyChallenges(JSON.parse(cachedDaily));
+        }
+      } else {
+        generateDailyChallenges();
+      }
+      
+      // Generate referral code
+      const generatedRef = "KII-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+      setReferralCode(generatedRef);
+      setQuestsHydrated(true);
+      setHydratedAddress(addr);
+    };
+
+    runHydration();
   }, [displayAddress]);
 
   // Generate default profile on first activity
@@ -743,43 +779,6 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
   }, [displayAddress, totalXp, transactions, profileUsername, hydratedAddress, isFullyHydrated]);
-
-  // Hydrate user profile from global database if available on connection
-  useEffect(() => {
-    if (typeof window === "undefined" || !displayAddress) return;
-    const addr = sanitizeAddress(displayAddress);
-
-    const syncFromDb = async () => {
-      try {
-        const res = await fetch("/api/leaderboard");
-        if (!res.ok) return;
-        const leaderboard = await res.json();
-        const myRow = leaderboard.find((item: any) => sanitizeAddress(item.address) === addr);
-        if (myRow) {
-          if (myRow.name && myRow.name !== profileUsername) {
-            setProfileUsername(myRow.name);
-            localStorage.setItem(`kii_profile_username_${addr}`, myRow.name);
-          }
-          if (myRow.title && myRow.title !== profileTitle) {
-            setProfileTitle(myRow.title);
-            localStorage.setItem(`kii_profile_title_${addr}`, myRow.title);
-          }
-          if (myRow.avatar && myRow.avatar !== profileAvatar) {
-            setProfileAvatar(myRow.avatar);
-            localStorage.setItem(`kii_profile_avatar_${addr}`, myRow.avatar);
-          }
-          if (myRow.xp !== undefined && myRow.xp !== totalXp) {
-            setTotalXp(myRow.xp);
-            localStorage.setItem(`kii_total_xp_v2_${addr}`, String(myRow.xp));
-          }
-        }
-      } catch (err) {
-        console.error("Failed to sync profile from global database:", err);
-      }
-    };
-
-    syncFromDb();
-  }, [displayAddress]);
 
   // Bulk sync previous leaderboard profiles from localStorage to global database
   useEffect(() => {
