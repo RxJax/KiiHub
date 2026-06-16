@@ -243,7 +243,7 @@ export default function Dashboard() {
 
     const fetchLeaderboard = async () => {
       try {
-        const res = await fetch("/api/leaderboard", { cache: "no-store" });
+        const res = await fetch(`/api/leaderboard?t=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch leaderboard");
         const data = await res.json();
         console.log("Raw API Payload:", data);

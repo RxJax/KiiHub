@@ -565,7 +565,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       let dbXp = null;
 
       try {
-        const res = await fetch("/api/leaderboard");
+        const res = await fetch(`/api/leaderboard?t=${Date.now()}`, { cache: "no-store" });
         if (res.ok) {
           const leaderboard = await res.json();
           const myRow = leaderboard.find((item: any) => sanitizeAddress(item.address) === addr);
