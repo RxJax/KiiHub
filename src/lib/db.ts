@@ -40,6 +40,7 @@ export async function initDb() {
   if (isInitialized) return;
   const pool = getPool();
   
+  // 1. Create users table
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       address VARCHAR(255) PRIMARY KEY,
@@ -52,6 +53,22 @@ export async function initDb() {
       last_updated BIGINT
     );
   `);
+
+  // 2. Create activities table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS activities (
+      hash VARCHAR(255) PRIMARY KEY,
+      type VARCHAR(50) NOT NULL,
+      timestamp BIGINT NOT NULL,
+      status VARCHAR(20) NOT NULL,
+      user_address VARCHAR(255) NOT NULL,
+      block_number INTEGER,
+      details TEXT,
+      xp_earned INTEGER DEFAULT 0,
+      game_played VARCHAR(50)
+    );
+  `);
+  
   isInitialized = true;
 }
 
@@ -134,4 +151,60 @@ export async function getLeaderboard() {
     total_xp: number;
     contracts: number;
   }>;
+}
+
+export async function insertActivity(act: {
+  hash: string;
+  type: string;
+  timestamp: number;
+  status: string;
+  user_address: string;
+  block_number?: number;
+  details?: string;
+  xp_earned?: number;
+  game_played?: string;
+}) {
+  await initDb();
+  const pool = getPool();
+
+  const cleanAddr = act.user_address.trim().toLowerCase();
+
+  await pool.query(`
+    INSERT INTO activities (hash, type, timestamp, status, user_address, block_number, details, xp_earned, game_played)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    ON CONFLICT (hash) DO UPDATE SET
+      type = EXCLUDED.type,
+      status = EXCLUDED.status,
+      details = EXCLUDED.details,
+      xp_earned = EXCLUDED.xp_earned,
+      game_played = EXCLUDED.game_played
+  `, [
+    act.hash,
+    act.type,
+    act.timestamp,
+    act.status,
+    cleanAddr,
+    act.block_number !== undefined ? act.block_number : null,
+    act.details || null,
+    act.xp_earned || 0,
+    act.game_played || null
+  ]);
+}
+
+export async function getActivities() {
+  await initDb();
+  const pool = getPool();
+
+  const query = `
+    SELECT a.hash, a.type, a.timestamp, a.status, a.user_address, a.block_number, a.details, 
+           COALESCE(a.xp_earned, 0) as xp_earned, a.game_played, 
+           u.username, u.avatar
+    FROM activities a
+    LEFT JOIN users u ON a.user_address = u.address
+    ORDER BY a.timestamp DESC
+    LIMIT 50
+  `;
+
+  const res = await pool.query(query);
+  return res.rows || [];
 }

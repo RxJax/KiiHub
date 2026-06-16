@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useWallet, isEvmWallet } from "../contexts/WalletContext";
-import { useQuests } from "../contexts/QuestContext";
+import { useQuests, sanitizeAddress } from "../contexts/QuestContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { 
   Search, 
@@ -118,6 +118,25 @@ export default function Dashboard() {
   const [copied, setCopied] = useState<boolean>(false);
   const [showQr, setShowQr] = useState<boolean>(false);
   const [mounted, setMounted] = useState<boolean>(false);
+  const [dbActivities, setDbActivities] = useState<any[]>([]);
+
+  // Poll global activities from PG database every 5 seconds
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const res = await fetch("/api/activities", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch activities");
+        const data = await res.json();
+        setDbActivities(data);
+      } catch (err) {
+        console.error("Failed to load global activities feed:", err);
+      }
+    };
+
+    fetchActivities();
+    const interval = setInterval(fetchActivities, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -300,22 +319,9 @@ export default function Dashboard() {
     completed: false
   };
 
-  // Compile recent transactions list, falling back to empty if transactions array is empty
-  // Compile recent transactions list, falling back to empty if globalActivities array is empty
-  const activityLogs = globalActivities.length > 0
-    ? globalActivities
-        .filter((tx) => {
-          const isTransfer = tx.type === "Direct Transfer" || 
-                             tx.type === "Transaction" ||
-                             tx.type.toLowerCase().includes("transfer");
-          if (isTransfer) {
-            return displayAddress && tx.userAddress.toLowerCase() === displayAddress.toLowerCase();
-          }
-          return true;
-        })
-        .slice(0, 5)
-        .map((tx) => {
-        let title = tx.type;
+  // Compile global recent activities feed, falling back to empty if dbActivities array is empty
+  const activityLogs = dbActivities.length > 0
+    ? dbActivities.slice(0, 5).map((tx) => {
         let badgeType = "TX";
         if (tx.type.toLowerCase().includes("deploy")) {
           badgeType = "CONTRACT";
@@ -340,7 +346,7 @@ export default function Dashboard() {
         }
         
         // Calculate simplified relative time
-        const elapsedMin = Math.floor((Date.now() - tx.timestamp) / 60000);
+        const elapsedMin = Math.floor((Date.now() - Number(tx.timestamp)) / 60000);
         let timeStr = "Just now";
         if (elapsedMin > 0 && elapsedMin < 60) {
           timeStr = `${elapsedMin}m ago`;
@@ -350,11 +356,25 @@ export default function Dashboard() {
           timeStr = `${Math.floor(elapsedMin / 1440)}d ago`;
         }
 
+        // Format user handle/address
+        const cleanUserAddr = sanitizeAddress(tx.user_address);
+        const cleanDisplayAddr = displayAddress ? sanitizeAddress(displayAddress) : "";
+        const isMe = cleanDisplayAddr && cleanUserAddr === cleanDisplayAddr;
+        
+        let userHandle = tx.username || `${cleanUserAddr.slice(0, 6)}...${cleanUserAddr.slice(-4)}`;
+        if (isMe) {
+          userHandle = `${tx.username || "Guest"} (You)`;
+        }
+
+        const avatarIcon = tx.avatar || "👤";
+        const actionText = tx.game_played || tx.type;
+
         return {
-          title,
+          title: `${avatarIcon} ${userHandle} → ${actionText}`,
           detail: details,
           time: timeStr,
-          badge: badgeType
+          badge: badgeType,
+          xpEarned: tx.xp_earned || 0
         };
       })
     : [];
@@ -1125,11 +1145,18 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <div className="text-right">
+                    <div className="text-right flex flex-col items-end justify-center">
                       <span className="text-[8.5px] text-zinc-500 block">{log.time}</span>
-                      <span className="text-[7.5px] font-black text-kii-purple-light uppercase mt-0.5 bg-kii-purple/10 px-1 rounded border border-kii-purple/20">
-                        {log.badge}
-                      </span>
+                      <div className="flex items-center gap-1 mt-0.5 justify-end">
+                        {log.xpEarned > 0 && (
+                          <span className="text-[7.5px] font-bold text-emerald-400 bg-emerald-500/10 px-1 rounded border border-emerald-500/20">
+                            +{log.xpEarned} XP
+                          </span>
+                        )}
+                        <span className="text-[7.5px] font-black text-kii-purple-light uppercase bg-kii-purple/10 px-1 rounded border border-kii-purple/20">
+                          {log.badge}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))

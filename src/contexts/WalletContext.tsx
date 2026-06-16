@@ -988,6 +988,29 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return updated;
     });
 
+    // Send activity to global database feed asynchronously (background catch)
+    if (displayAddress && userAddr !== "0x_demo_user") {
+      fetch("/api/activities", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          hash,
+          type,
+          timestamp,
+          status: tx.status,
+          userAddress: userAddr,
+          blockNumber: tx.blockNumber || latestBlock,
+          details,
+          xpEarned: xpEarned || 0,
+          gamePlayed: gamePlayed || null
+        })
+      }).catch((err) => {
+        console.error("Failed to sync global activity:", err);
+      });
+    }
+
     // If it's a swap, also add to globalSwaps immediately and save to cache
     if (type === "Swap") {
       let fromAmount = 10;
