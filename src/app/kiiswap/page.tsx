@@ -94,9 +94,28 @@ export default function KiiSwapDEX() {
   const { isConnected, displayAddress, transactions, balance, stablecoinBalances, executeSwapTransaction, mintTestToken, fundPoolReserves, fetchBalance, walletType, globalSwaps, isLoadingSwaps, addTransaction, latestBlock, globalActivities } = useWallet();
   const { trackSwapAction, triggerXpConfetti, totalXp } = useQuests();
   const [mounted, setMounted] = useState<boolean>(false);
+  const [dbActivities, setDbActivities] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Poll global activities from PG database every 5 seconds
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const res = await fetch("/api/activities", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch activities");
+        const data = await res.json();
+        setDbActivities(data);
+      } catch (err) {
+        console.error("Failed to load global activities in KiiSwap:", err);
+      }
+    };
+
+    fetchActivities();
+    const interval = setInterval(fetchActivities, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleAddTokenToWallet = async (symbol: string) => {
@@ -906,41 +925,34 @@ export default function KiiSwapDEX() {
   };
 
   const settlementItems = useMemo(() => {
-    const swaps = globalSwaps.map(s => ({
-      hash: s.hash,
-      timestamp: s.timestamp,
-      details: `${s.fromAmount.toLocaleString(undefined, { minimumFractionDigits: s.fromToken === "wBTC" ? 8 : 2, maximumFractionDigits: s.fromToken === "wBTC" ? 8 : 4 })} ${s.fromToken} → ${s.toAmount.toLocaleString(undefined, { minimumFractionDigits: s.toToken === "wBTC" ? 8 : 2, maximumFractionDigits: s.toToken === "wBTC" ? 8 : 4 })} ${s.toToken}`,
-      isSwap: true,
-      fromAmount: s.fromAmount,
-      fromToken: s.fromToken,
-      toAmount: s.toAmount,
-      toToken: s.toToken
-    }));
-
-    const transfers = globalActivities
+    return dbActivities
       .filter(act => {
-        const isTransfer = act.type === "Direct Transfer" || 
-                           act.type === "Transaction" ||
-                           act.type.toLowerCase().includes("transfer");
-        if (!isTransfer) return false;
-        return displayAddress && act.userAddress.toLowerCase() === displayAddress.toLowerCase();
+        const typeLower = act.type.toLowerCase();
+        return typeLower.includes("swap") || typeLower.includes("transfer");
       })
-      .map(t => ({
-        hash: t.hash,
-        timestamp: t.timestamp,
-        details: t.details,
-        isSwap: false,
-        fromAmount: 0,
-        fromToken: "",
-        toAmount: 0,
-        toToken: ""
-      }));
+      .map(act => {
+        const isSwap = act.type.toLowerCase().includes("swap");
+        
+        // Format user handle/address
+        const cleanUserAddr = sanitizeAddress(act.user_address);
+        const cleanDisplayAddr = displayAddress ? sanitizeAddress(displayAddress) : "";
+        const isMe = cleanDisplayAddr && cleanUserAddr === cleanDisplayAddr;
+        
+        let userHandle = act.username || `${cleanUserAddr.slice(0, 6)}...${cleanUserAddr.slice(-4)}`;
+        if (isMe) {
+          userHandle = `${act.username || "Guest"} (You)`;
+        }
 
-    const merged = [...swaps, ...transfers];
-    const map = new Map<string, typeof merged[0]>();
-    merged.forEach(item => map.set(item.hash.toLowerCase(), item));
-    return Array.from(map.values()).sort((a, b) => b.timestamp - a.timestamp);
-  }, [globalSwaps, globalActivities]);
+        const avatarIcon = act.avatar || "👤";
+        
+        return {
+          hash: act.hash,
+          timestamp: Number(act.timestamp),
+          details: `${avatarIcon} ${userHandle}: ${act.details}`,
+          isSwap
+        };
+      });
+  }, [dbActivities, displayAddress]);
 
   const recentSwapSettlementsCard = (
     <section className="glass-panel p-5 rounded-xl border border-brand-border space-y-4">
