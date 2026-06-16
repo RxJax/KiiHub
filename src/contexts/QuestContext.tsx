@@ -744,6 +744,43 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [displayAddress, totalXp, transactions, profileUsername, hydratedAddress, isFullyHydrated]);
 
+  // Hydrate user profile from global database if available on connection
+  useEffect(() => {
+    if (typeof window === "undefined" || !displayAddress) return;
+    const addr = sanitizeAddress(displayAddress);
+
+    const syncFromDb = async () => {
+      try {
+        const res = await fetch("/api/leaderboard");
+        if (!res.ok) return;
+        const leaderboard = await res.json();
+        const myRow = leaderboard.find((item: any) => sanitizeAddress(item.address) === addr);
+        if (myRow) {
+          if (myRow.name && myRow.name !== profileUsername) {
+            setProfileUsername(myRow.name);
+            localStorage.setItem(`kii_profile_username_${addr}`, myRow.name);
+          }
+          if (myRow.title && myRow.title !== profileTitle) {
+            setProfileTitle(myRow.title);
+            localStorage.setItem(`kii_profile_title_${addr}`, myRow.title);
+          }
+          if (myRow.avatar && myRow.avatar !== profileAvatar) {
+            setProfileAvatar(myRow.avatar);
+            localStorage.setItem(`kii_profile_avatar_${addr}`, myRow.avatar);
+          }
+          if (myRow.xp !== undefined && myRow.xp !== totalXp) {
+            setTotalXp(myRow.xp);
+            localStorage.setItem(`kii_total_xp_v2_${addr}`, String(myRow.xp));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to sync profile from global database:", err);
+      }
+    };
+
+    syncFromDb();
+  }, [displayAddress]);
+
   // Bulk sync previous leaderboard profiles from localStorage to global database
   useEffect(() => {
     if (typeof window === "undefined") return;
