@@ -1076,7 +1076,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               try {
                 const tokenContract = new ethers.Contract(registry.tokenAddress, testTokenAbi, provider);
                 const decimals = await tokenContract.decimals().catch(() => 18);
-                const tokenBal = await tokenContract.balanceOf(checksumAddress).catch(() => BigInt(0));
+                let tokenBal = await tokenContract.balanceOf(checksumAddress).catch(() => BigInt(0));
+                
+                // If user is the owner of the token contract, subtract the initial supply (1M) to show real balance
+                try {
+                  const owner = await tokenContract.owner();
+                  if (owner && owner.toLowerCase() === checksumAddress.toLowerCase()) {
+                    const million = ethers.parseUnits("1000000", decimals);
+                    if (tokenBal >= million) {
+                      tokenBal = tokenBal - million;
+                    }
+                  }
+                } catch (err) {}
+
                 const formatted = Number(ethers.formatUnits(tokenBal, decimals)).toFixed(tokenSymbol === "wBTC" ? 8 : 4);
                 updatedBalances[tokenSymbol] = formatted;
               } catch (tokenErr) {
@@ -1114,7 +1126,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 try {
                   const tokenContract = new ethers.Contract(registry.tokenAddress, testTokenAbi, sentryProvider);
                   const decimals = await tokenContract.decimals().catch(() => 18);
-                  const tokenBal = await tokenContract.balanceOf(checksumAddress).catch(() => BigInt(0));
+                  let tokenBal = await tokenContract.balanceOf(checksumAddress).catch(() => BigInt(0));
+
+                  // If user is the owner of the token contract, subtract the initial supply (1M) to show real balance
+                  try {
+                    const owner = await tokenContract.owner();
+                    if (owner && owner.toLowerCase() === checksumAddress.toLowerCase()) {
+                      const million = ethers.parseUnits("1000000", decimals);
+                      if (tokenBal >= million) {
+                        tokenBal = tokenBal - million;
+                      }
+                    }
+                  } catch (err) {}
+
                   const formatted = Number(ethers.formatUnits(tokenBal, decimals)).toFixed(tokenSymbol === "wBTC" ? 8 : 4);
                   updatedBalances[tokenSymbol] = formatted;
                 } catch (tokenErr) {

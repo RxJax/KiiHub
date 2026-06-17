@@ -643,7 +643,7 @@ export default function HallOfFame() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-white">{proj.name}</h3>
-                    <span className="text-[10px] font-bold text-zinc-500 font-mono">By {profileUsername}</span>
+                    <span className="text-[10px] font-bold text-zinc-500 font-mono">By {proj.username || "Anonymous"}</span>
                   </div>
                   <p className="text-xs text-zinc-400 leading-relaxed font-medium">
                     {proj.description}

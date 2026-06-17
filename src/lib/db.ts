@@ -68,6 +68,21 @@ export async function initDb() {
       game_played VARCHAR(50)
     );
   `);
+
+  // 3. Create projects table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS projects (
+      id VARCHAR(255) PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      github_url VARCHAR(255),
+      demo_url VARCHAR(255),
+      visits INTEGER DEFAULT 0,
+      submitted_at BIGINT NOT NULL,
+      user_address VARCHAR(255) NOT NULL,
+      username VARCHAR(255)
+    );
+  `);
   
   isInitialized = true;
 }
@@ -208,3 +223,77 @@ export async function getActivities() {
   const res = await pool.query(query);
   return res.rows || [];
 }
+
+export async function upsertProject(project: {
+  id: string;
+  name: string;
+  description: string;
+  githubUrl: string;
+  demoUrl: string;
+  visits: number;
+  submittedAt: number;
+  userAddress: string;
+  username?: string;
+}) {
+  await initDb();
+  const pool = getPool();
+  
+  const cleanAddr = project.userAddress.trim().toLowerCase();
+  
+  await pool.query(`
+    INSERT INTO projects (id, name, description, github_url, demo_url, visits, submitted_at, user_address, username)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name,
+      description = EXCLUDED.description,
+      github_url = EXCLUDED.github_url,
+      demo_url = EXCLUDED.demo_url,
+      visits = EXCLUDED.visits,
+      submitted_at = EXCLUDED.submitted_at,
+      user_address = EXCLUDED.user_address,
+      username = EXCLUDED.username
+  `, [
+    project.id,
+    project.name,
+    project.description,
+    project.githubUrl,
+    project.demoUrl,
+    project.visits,
+    project.submittedAt,
+    cleanAddr,
+    project.username || null
+  ]);
+}
+
+export async function getProjects() {
+  await initDb();
+  const pool = getPool();
+  
+  const query = `
+    SELECT p.id, p.name, p.description, 
+           p.github_url as "githubUrl", 
+           p.demo_url as "demoUrl", 
+           COALESCE(p.visits, 0) as visits, 
+           p.submitted_at as "submittedAt", 
+           p.user_address as "userAddress", 
+           COALESCE(u.username, p.username, 'Anonymous') as username
+    FROM projects p
+    LEFT JOIN users u ON p.user_address = u.address
+    ORDER BY COALESCE(p.visits, 0) DESC, p.submitted_at DESC
+  `;
+  
+  const res = await pool.query(query);
+  return res.rows || [];
+}
+
+export async function incrementProjectVisits(projectId: string, amount: number) {
+  await initDb();
+  const pool = getPool();
+  
+  await pool.query(`
+    UPDATE projects 
+    SET visits = COALESCE(visits, 0) + $2 
+    WHERE id = $1
+  `, [projectId, amount]);
+}
+

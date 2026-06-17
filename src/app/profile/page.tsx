@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useWallet } from "@/contexts/WalletContext";
-import { useQuests, RarityType } from "@/contexts/QuestContext";
+import { useQuests, RarityType, sanitizeAddress } from "@/contexts/QuestContext";
 import { 
   User, 
   Award, 
@@ -211,6 +211,8 @@ export default function Profile() {
     submitProject, 
     simulateProjectVisit
   } = useQuests();
+
+  const myProjects = projects.filter(p => sanitizeAddress(p.userAddress) === sanitizeAddress(displayAddress));
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [usernameInput, setUsernameInput] = useState<string>(profileUsername);
@@ -480,7 +482,7 @@ export default function Profile() {
                   {/* Submitted projects */}
                   <div className="flex items-center justify-between py-2 px-3 bg-white/[0.01] border border-white/5 rounded-xl hover:bg-white/[0.03] transition-all">
                     <span className="text-zinc-400">Submitted projects</span>
-                    <span className="text-emerald-400 font-bold">{projects.length}</span>
+                    <span className="text-emerald-400 font-bold">{myProjects.length}</span>
                   </div>
 
                   {/* Tx Count */}
@@ -698,9 +700,9 @@ export default function Profile() {
           )}
 
           {/* Projects List */}
-          {projects.length > 0 ? (
+          {myProjects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 font-sans">
-              {projects.map((proj) => (
+              {myProjects.map((proj) => (
                 <div key={proj.id} className="p-5 bg-zinc-950/40 border border-white/10 rounded-2xl flex flex-col justify-between gap-5 relative group hover:border-cyan-500/30 hover:bg-zinc-950/60 transition-all duration-300">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">

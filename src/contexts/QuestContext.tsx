@@ -82,6 +82,8 @@ export interface Project {
   demoUrl: string;
   visits: number;
   submittedAt: number;
+  userAddress?: string;
+  username?: string;
 }
 
 export interface CommunityGoal {
@@ -476,7 +478,6 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setQuests(INITIAL_QUESTS);
       setAchievements(INITIAL_ACHIEVEMENTS);
       setWeeklyMissions(INITIAL_WEEKLY_MISSIONS);
-      setProjects([]);
       setReferredUsers([]);
       setProfileUsername("Not Connected");
       setProfileTitle("Guest");
@@ -758,6 +759,63 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     runHydration();
   }, [displayAddress]);
 
+  // Fetch global projects from DB and sync any unsynced local projects
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const fetchGlobalProjects = async () => {
+      try {
+        const res = await fetch(`/api/projects?t=${Date.now()}`, { cache: "no-store" });
+        if (res.ok) {
+          const dbProjects = await res.json();
+          
+          if (displayAddress) {
+            const addr = sanitizeAddress(displayAddress);
+            const localProjectsStr = localStorage.getItem(`kii_projects_v2_${addr}`);
+            if (localProjectsStr) {
+              const localProjects = JSON.parse(localProjectsStr) as Project[];
+              let updatedDbProjects = [...dbProjects];
+              let hasNewLocal = false;
+              
+              for (const localProj of localProjects) {
+                const exists = dbProjects.some((p: any) => p.id === localProj.id);
+                if (!exists) {
+                  hasNewLocal = true;
+                  const projWithAddr = {
+                    ...localProj,
+                    userAddress: addr,
+                    username: profileUsername || "Anonymous"
+                  };
+                  
+                  await fetch("/api/projects", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(projWithAddr)
+                  }).catch(e => console.error("Failed to sync local project to DB:", e));
+                  
+                  updatedDbProjects.push(projWithAddr);
+                }
+              }
+              
+              if (hasNewLocal) {
+                updatedDbProjects.sort((a, b) => (b.visits || 0) - (a.visits || 0) || b.submittedAt - a.submittedAt);
+                setProjects(updatedDbProjects);
+                localStorage.setItem(`kii_projects_v2_${addr}`, JSON.stringify(updatedDbProjects));
+                return;
+              }
+            }
+          }
+          
+          setProjects(dbProjects);
+        }
+      } catch (e) {
+        console.error("Failed to fetch global projects:", e);
+      }
+    };
+    
+    fetchGlobalProjects();
+  }, [displayAddress, profileUsername]);
+
   // Generate default profile on first activity
   useEffect(() => {
     if (typeof window === "undefined" || !isFullyHydrated) return;
@@ -940,7 +998,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           xp: newXp,
           contracts: contractDeploys,
           transactionsCount: Math.max(realTxCount, transactions.length),
-          projectsCount: projects.length,
+          projectsCount: projects.filter(p => sanitizeAddress(p.userAddress) === addr).length,
           referralsCount: referredUsers.length,
           swapsCount: swapCount,
           swapVolume: swapVolume,
@@ -1373,7 +1431,8 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     // 6. Kii Pioneer
-    if (projects.length > 0 && isLocked("kii_pioneer")) {
+    const myProjectsCount = projects.filter(p => sanitizeAddress(p.userAddress) === sanitizeAddress(displayAddress)).length;
+    if (myProjectsCount > 0 && isLocked("kii_pioneer")) {
       unlockAchievement("kii_pioneer");
     }
 
@@ -1542,6 +1601,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Project submissions methods
   const submitProject = (name: string, description: string, githubUrl: string, demoUrl: string) => {
+    const addr = sanitizeAddress(displayAddress || "0x_demo_user");
     const newProj: Project = {
       id: "proj_" + Math.random().toString(36).substring(2, 9),
       name,
@@ -1549,8 +1609,19 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       githubUrl,
       demoUrl,
       visits: 0,
-      submittedAt: Date.now()
+      submittedAt: Date.now(),
+      userAddress: addr,
+      username: profileUsername || "Anonymous"
     };
+
+    // Sync to database
+    if (addr !== "0x_demo_user") {
+      fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newProj)
+      }).catch(e => console.error("Failed to submit project to DB:", e));
+    }
     
     const updated = [newProj, ...projects];
     setProjects(updated);
@@ -1578,6 +1649,12 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Simulate traffic visits on submitted projects
   const simulateProjectVisit = (projectId: string, amount: number) => {
+    fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId, amount })
+    }).catch(e => console.error("Failed to sync project visit:", e));
+
     setProjects((prev) => {
       const idx = prev.findIndex(p => p.id === projectId);
       if (idx === -1) return prev;
@@ -1753,7 +1830,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           xp: totalXp,
           contracts: contractDeploys,
           transactionsCount: Math.max(realTxCount, transactions.length),
-          projectsCount: projects.length,
+          projectsCount: projects.filter(p => sanitizeAddress(p.userAddress) === addr).length,
           referralsCount: referredUsers.length,
           swapsCount: swapCount,
           swapVolume: swapVolume,
@@ -1805,13 +1882,12 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Sum up values
     let totalTxs = 0;
     let totalContracts = 0;
-    let totalProjects = 0;
+    let totalProjects = projects.length;
     let totalQuests = 0;
 
     Object.values(cleanedRegistry).forEach((p: any) => {
       totalTxs += p.transactionsCount || 0;
       totalContracts += p.contracts || 0;
-      totalProjects += p.projectsCount || 0;
       totalQuests += p.questsCount || 0;
     });
 
@@ -1820,20 +1896,17 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const addr = sanitizeAddress(displayAddress);
       const userTxs = Math.max(realTxCount, transactions.length);
       const userContracts = transactions.filter(t => t.type.includes("Deploy")).length;
-      const userProjects = projects.length;
       const userQuests = quests.filter(q => q.completed).length;
 
       const existingProfile = cleanedRegistry[addr];
       if (!existingProfile) {
         totalTxs += userTxs;
         totalContracts += userContracts;
-        totalProjects += userProjects;
         totalQuests += userQuests;
       } else {
         // Adjust sum if registry is stale
         totalTxs += Math.max(0, userTxs - (existingProfile.transactionsCount || 0));
         totalContracts += Math.max(0, userContracts - (existingProfile.contracts || 0));
-        totalProjects += Math.max(0, userProjects - (existingProfile.projectsCount || 0));
         totalQuests += Math.max(0, userQuests - (existingProfile.questsCount || 0));
       }
     }
@@ -1948,7 +2021,7 @@ export const QuestProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         xp: totalXp,
         contracts: contractDeploys,
         transactionsCount: Math.max(realTxCount, transactions.length),
-        projectsCount: projects.length,
+        projectsCount: projects.filter(p => sanitizeAddress(p.userAddress) === addr).length,
         referralsCount: referredUsers.length,
         swapsCount: newCount,
         swapVolume: newVolume,
